@@ -139,7 +139,7 @@ function handleCopyButtonClick(button, event) {
     if (hasHighlights) {
       console.log('✨ Message contains highlights, generating enhanced copy content');
       
-      // 生成带高亮标签的内容
+      // 🆕 生成带高亮和评论标签的内容
       const enhancedContent = generateHighlightedText(messageContainer);
       
       if (enhancedContent) {
@@ -259,22 +259,11 @@ function getElementAttributes(element) {
   return attrs;
 }
 
-// 生成带高亮标签的文本内容
+// 🆕 生成带高亮和评论标签的文本内容
 function generateHighlightedText(container) {
   try {
     // 克隆容器以避免修改原DOM
     const clonedContainer = container.cloneNode(true);
-    
-    // 处理CSS.highlights高亮
-    if (window.highlights && window.highlights.size > 0) {
-      // 为CSS高亮创建临时标记
-      for (const [id, highlightData] of window.highlights) {
-        if (isRangeInContainer(highlightData.range, container)) {
-          // 在克隆容器中找到对应文本并标记
-          markTextInClonedContainer(clonedContainer, highlightData.text);
-        }
-      }
-    }
     
     // 处理DOM高亮 (.ai-highlight-fallback)
     const fallbackHighlights = clonedContainer.querySelectorAll('.ai-highlight-fallback');
@@ -289,22 +278,45 @@ function generateHighlightedText(container) {
     let textContent = clonedContainer.textContent || clonedContainer.innerText || '';
     textContent = textContent.replace(/\s+/g, ' ').trim(); // 清理空格
     
-    // 如果有临时标记，替换为highlight标签
-    // 这里简化处理，直接在文本中查找高亮内容并标记
+    // 🆕 处理CSS.highlights高亮，包含评论信息
     if (window.highlights && window.highlights.size > 0) {
-      for (const [id, highlightData] of window.highlights) {
-        if (isRangeInContainer(highlightData.range, container)) {
-          const highlightText = highlightData.text.trim();
-          if (highlightText && textContent.includes(highlightText)) {
-            textContent = textContent.replace(
-              new RegExp(escapeRegExp(highlightText), 'g'),
-              `<highlight>${highlightText}</highlight>`
-            );
+      console.log('Processing highlights with comments:', window.highlights.size);
+      console.log('Comment data available:', !!window.highlightComments, window.highlightComments?.size || 0);
+      
+      // 按文本长度排序，避免短文本替换影响长文本
+      const sortedHighlights = Array.from(window.highlights.entries())
+        .filter(([id, highlightData]) => isRangeInContainer(highlightData.range, container))
+        .sort(([,a], [,b]) => b.text.length - a.text.length);
+      
+      for (const [id, highlightData] of sortedHighlights) {
+        const highlightText = highlightData.text.trim();
+        if (highlightText && textContent.includes(highlightText)) {
+          // 🆕 获取关联的评论数据
+          const commentData = window.highlightComments ? window.highlightComments.get(id) : null;
+          const hasComment = commentData && commentData.hasComment && commentData.comment.trim();
+          
+          let replacementTag;
+          if (hasComment) {
+            // 有评论：生成带comment属性的标签
+            const escapedComment = escapeXMLAttribute(commentData.comment.trim());
+            replacementTag = `<highlight comment="${escapedComment}">${highlightText}</highlight>`;
+            console.log(`✨ Generated highlight with comment: "${commentData.comment.trim()}"`);
+          } else {
+            // 无评论：生成普通标签
+            replacementTag = `<highlight>${highlightText}</highlight>`;
+            console.log('📝 Generated highlight without comment');
           }
+          
+          // 替换文本（只替换第一个匹配项，避免重复）
+          textContent = textContent.replace(
+            new RegExp(escapeRegExp(highlightText)), 
+            replacementTag
+          );
         }
       }
     }
     
+    console.log('📋 Final enhanced content:', textContent);
     return textContent;
     
   } catch (error) {
@@ -322,6 +334,19 @@ function markTextInClonedContainer(container, text) {
 // 转义正则表达式特殊字符
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// 🆕 转义XML属性中的特殊字符
+function escapeXMLAttribute(string) {
+  return string
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .replace(/\t/g, ' ');
 }
 
 // 复制到剪贴板
