@@ -12,7 +12,7 @@ argument-hint: [功能名称] [任务描述或任务编号]
 ### 核心约束
 - **一次一任务**：只执行用户指定的单个任务
 - **完成即停**：任务完成后停止，等待用户确认
-- **规范优先**：必须先读取requirements.md、design.md、tasks.md
+- **规范优先**：必须先读取requirements.md、design.md、tasks.md、verify.md
 
 ### 执行流程
 - 首先读取`specs/{功能名称}/`下的规范文档，

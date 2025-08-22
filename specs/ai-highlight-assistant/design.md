@@ -2,7 +2,7 @@
 
 ## 概述
 
-AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在Gemini平台的AI回复中高亮重要文本，并通过劫持原生复制按钮来复制包含高亮标记的完整AI回复内容。
+AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在Gemini平台的AI回复中高亮重要文本并添加个人评论，通过劫持原生复制按钮来复制包含高亮标记和评论的完整AI回复内容。
 
 **MVP已实现的核心功能：**
 - ✅ 在AI回复区域内选中文本立即高亮（CSS.highlights API + 智能降级）
@@ -10,22 +10,33 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在Gemini平
 - ✅ 劫持AI回复原生复制按钮，智能生成带`<highlight>`标签的内容
 - ✅ 高亮范围限制在AI回复区域，避免误操作
 
+**新增评论功能设计：**
+- 📝 点击高亮文本显示评论输入框
+- 💬 评论与高亮文本持久化关联存储
+- 🔍 有评论的高亮文本显示指示器
+- 📋 复制时包含评论信息：`<highlight comment="评论">文本</highlight>`
+
 ## 架构设计（MVP实现）
 
 ```mermaid
 graph TD
     A[Gemini网页] --> B[Content Script]
     A --> C[Copy Enhancer]
-    B --> D[CSS.highlights API]
-    B --> E[高亮范围检查]
-    C --> F[复制按钮劫持]
-    C --> G[智能内容生成]
-    C --> H[Clipboard API]
+    A --> D[Comment Manager]
+    B --> E[CSS.highlights API]
+    B --> F[高亮范围检查]
+    C --> G[复制按钮劫持]
+    C --> H[智能内容生成]
+    C --> I[Clipboard API]
+    D --> J[评论输入框]
+    D --> K[评论存储]
+    D --> L[评论指示器]
+    D --> M[悬停工具提示]
 ```
 
 ## 核心组件
 
-### 1. Content Script (`content.js`) ✅ 已实现
+### 1. Content Script (`content.js`) ✅ 已实现，需扩展
 负责高亮功能的核心逻辑
 
 **职责：**
@@ -34,6 +45,7 @@ graph TD
 - 智能降级到传统DOM高亮
 - Ctrl+点击移除高亮，Ctrl+Z撤销
 - 限制高亮范围在AI回复容器内
+- 🆕 与Comment Manager协作处理点击事件
 
 **关键方法：**
 ```javascript
@@ -45,16 +57,19 @@ applyHighlightCSS(selection)
 applyHighlightFallback(selection)
 // 移除高亮
 removeHighlightAtPoint(clickPoint)
+// 🆕 处理高亮点击事件
+handleHighlightClick(event)
 ```
 
-### 2. Copy Enhancer (`copy-enhancer.js`) ✅ 已实现
+### 2. Copy Enhancer (`copy-enhancer.js`) ✅ 已实现，需扩展
 负责劫持和增强原生复制功能
 
 **职责：**
 - 精确识别AI回复的复制按钮（`data-test-id="copy-button"`）
 - 监听复制按钮点击事件
 - 检测消息容器中的高亮内容
-- 生成带`<highlight>`标签的增强文本
+- 🆕 获取高亮关联的评论数据
+- 生成带`<highlight comment="">`标签的增强文本
 - 覆写剪贴板内容
 
 **关键方法：**
@@ -63,34 +78,62 @@ removeHighlightAtPoint(clickPoint)
 findAndSetupCopyButtons()
 // 处理复制点击
 handleCopyButtonClick(button, event)
-// 生成增强内容
-generateHighlightedText(container)
+// 🆕 生成包含评论的增强内容
+generateHighlightedTextWithComments(container)
 // 剪贴板操作
 copyToClipboard(text)
 ```
 
+### 3. Comment Manager (`comment-manager.js`) 🆕 新增组件
+负责评论功能的核心逻辑
+
+**职责：**
+- 管理高亮文本的评论数据
+- 显示评论输入界面
+- 处理评论的保存和编辑
+- 显示评论指示器和工具提示
+- 评论数据的持久化存储
+
+**关键方法：**
+```javascript
+// 显示评论输入框
+showCommentInput(highlightId, position)
+// 保存评论
+saveComment(highlightId, comment)
+// 显示评论指示器
+showCommentIndicator(highlightElement)
+// 显示评论工具提示
+showCommentTooltip(highlightElement, comment)
+// 获取高亮的评论
+getHighlightComment(highlightId)
+```
+
 ## 数据模型（MVP简化版）
 
-### 内存中高亮数据存储
+### 内存中高亮数据存储（含评论）
 ```javascript
 // window.highlights Map存储
 {
   1: {
     range: Range对象,
     text: "决策树", 
-    timestamp: 1640995200000
+    comment: "这个算法很直观",
+    timestamp: 1640995200000,
+    hasComment: true
   },
   2: {
     range: Range对象,
     text: "神经网络",
-    timestamp: 1640995300000
+    comment: "",
+    timestamp: 1640995300000,
+    hasComment: false
   }
 }
 ```
 
-### 生成的复制内容格式
+### 生成的复制内容格式（含评论）
 ```
-机器学习中，<highlight>决策树</highlight>容易理解，随机森林准确率高，但<highlight>神经网络</highlight>需要更多数据。
+机器学习中，<highlight comment="这个算法很直观">决策树</highlight>容易理解，随机森林准确率高，但<highlight>神经网络</highlight>需要更多数据。
 ```
 
 ## 核心流程（MVP实现）
@@ -109,17 +152,18 @@ sequenceDiagram
     C->>U: 显示黄色高亮效果
 ```
 
-### 2. 智能复制流程 ✅
+### 2. 智能复制流程（含评论）✅
 ```mermaid
 sequenceDiagram
     participant U as 用户
     participant E as Copy Enhancer
-    participant C as Content Script
+    participant CM as Comment Manager
     participant CB as Clipboard
     
     U->>E: 点击AI回复的复制按钮
     E->>E: 检测消息容器中的高亮
-    E->>E: 生成带<highlight>标签的文本
+    E->>CM: 获取高亮关联的评论数据
+    E->>E: 生成带<highlight comment="">标签的文本
     E->>CB: 覆写剪贴板内容
     E->>U: 控制台显示复制成功
 ```
@@ -130,11 +174,45 @@ sequenceDiagram
     participant U as 用户
     participant C as Content Script
     participant H as CSS.highlights
+    participant CM as Comment Manager
     
     U->>C: Ctrl+点击高亮文本 或 Ctrl+Z
     C->>C: 检测点击位置或获取最后高亮
+    C->>CM: 移除关联的评论数据
     C->>H: 从highlights注册表中移除
     C->>U: 高亮效果消失
+```
+
+### 4. 添加评论流程 🆕
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant CM as Comment Manager
+    participant UI as 评论UI
+    participant S as Storage
+    
+    U->>CM: 点击已高亮的文本
+    CM->>UI: 显示评论输入框
+    CM->>UI: 预填充现有评论（如果有）
+    U->>UI: 输入评论内容
+    U->>UI: 保存评论
+    UI->>S: 存储评论数据
+    S->>CM: 更新highlight记录
+    CM->>U: 显示评论指示器
+```
+
+### 5. 评论悬停显示流程 🆕
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant CM as Comment Manager
+    participant TT as Tooltip
+    
+    U->>CM: 鼠标悬停在有评论的高亮文本
+    CM->>CM: 检查是否有评论
+    CM->>TT: 显示评论工具提示
+    U->>CM: 鼠标移开
+    CM->>TT: 隐藏工具提示
 ```
 
 ## 技术决策（MVP实现）
@@ -156,15 +234,21 @@ sequenceDiagram
 - **避免误操作：** 防止在侧边栏、输入框等地方误触
 - **符合使用场景：** 用户只需要高亮AI的回复内容
 
+### 4. 评论功能的设计考虑 🆕
+- **点击触发：** 点击高亮文本即可添加评论，操作简单直观
+- **指示器显示：** 有评论的高亮文本显示小图标，区分有无评论
+- **悬停显示：** 鼠标悬停显示评论内容，不占用页面空间
+- **格式统一：** 复制时使用`comment`属性，与高亮标签统一
+
 ## 当前限制与未来增强
 
 ### MVP有意简化的功能
-- **数据持久化：** 当前高亮数据存储在内存中，页面刷新后丢失
+- **数据持久化：** 当前高亮和评论数据存储在内存中，页面刷新后丢失
 - **高亮管理：** 没有批量删除、导出等管理功能
+- **评论管理：** 没有评论历史、批量编辑功能
 - **多平台支持：** 当前只支持Gemini，未来可扩展到其他AI平台
 
 ### 后续可选增强
-- Chrome Storage持久化存储
-- 高亮数据导入/导出
-- 快捷键自定义
+- Chrome Storage持久化存储（高亮+评论）
+- 快捷键自定义（添加评论快捷键）
 - 多主题高亮颜色

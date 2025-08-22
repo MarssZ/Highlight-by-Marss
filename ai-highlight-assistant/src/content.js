@@ -5,6 +5,12 @@ console.log('AI Highlight Assistant loaded');
 let highlights = new Map();
 let highlightCounter = 0;
 
+// 🆕 存储评论数据
+let highlightComments = new Map();
+
+// 🆕 防止误触评论的状态标记
+let justHighlighted = false;
+
 // 检查浏览器是否支持 CSS.highlights
 const supportsHighlights = 'highlights' in CSS;
 console.log('CSS.highlights support:', supportsHighlights);
@@ -25,8 +31,9 @@ function initExtension() {
       CSS.highlights.set('ai-highlights', new Highlight());
       console.log('CSS.highlights initialized');
       
-      // 将highlights暴露给copy-enhancer使用
+      // 将highlights和评论数据暴露给copy-enhancer使用
       window.highlights = highlights;
+      window.highlightComments = highlightComments;
     }
     
     // 初始化复制增强功能
@@ -56,8 +63,8 @@ function setupTextSelection() {
   document.addEventListener('mouseup', handleTextSelection);
   document.addEventListener('keyup', handleTextSelection); // 处理键盘选择
   
-  // 添加点击事件监听器用于移除高亮
-  document.addEventListener('click', handleCtrlClickRemoval);
+  // 添加点击事件监听器用于移除高亮和添加评论
+  document.addEventListener('click', handleHighlightClick);
 }
 
 // 处理文本选择
@@ -147,11 +154,25 @@ function applyHighlightCSS(selection) {
       timestamp: Date.now()
     });
     
+    // 🆕 初始化评论数据
+    highlightComments.set(highlightId, {
+      text: range.toString(),
+      comment: '',
+      hasComment: false,
+      timestamp: Date.now()
+    });
+    
     // 添加到CSS高亮注册表
     const highlight = CSS.highlights.get('ai-highlights');
     highlight.add(range);
     
     console.log('CSS Highlight applied:', highlightId);
+    
+    // 🆕 标记刚刚完成高亮，防止误触评论
+    justHighlighted = true;
+    setTimeout(() => {
+      justHighlighted = false;
+    }, 300); // 300ms内的点击不触发评论
     
     // 清除选择
     selection.removeAllRanges();
@@ -198,41 +219,103 @@ function applyHighlightFallback(selection) {
   }
 }
 
-// 处理Ctrl+点击移除高亮
-function handleCtrlClickRemoval(event) {
-  // 只有按住Ctrl键时才处理
-  if (!event.ctrlKey) {
-    return;
-  }
-  
+// 🆕 处理高亮点击（添加评论或移除高亮）
+function handleHighlightClick(event) {
   if (supportsHighlights && highlights.size > 0) {
-    // 检查点击位置是否在高亮范围内
     const clickPoint = { x: event.clientX, y: event.clientY };
-    const removed = removeHighlightAtPoint(clickPoint);
     
-    if (removed) {
-      // 阻止默认行为
-      event.preventDefault();
-      event.stopPropagation();
+    // 检查点击位置是否在高亮范围内
+    const highlightId = findHighlightAtPoint(clickPoint);
+    
+    if (highlightId) {
+      if (event.ctrlKey) {
+        // Ctrl+点击：移除高亮
+        removeHighlightById(highlightId);
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        // 🆕 防止误触：刚完成高亮时不触发评论
+        if (justHighlighted) {
+          console.log('刚完成高亮，跳过评论触发');
+          return;
+        }
+        
+        // 普通点击：添加评论
+        showCommentInput(highlightId);
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
   }
 }
 
-// 移除CSS高亮（通过点击坐标）
-function removeHighlightAtPoint(clickPoint) {
-  // 遍历所有高亮范围，检查点击位置是否在其中
+// 🆕 查找点击位置的高亮ID
+function findHighlightAtPoint(clickPoint) {
   for (const [id, highlightData] of highlights) {
     if (isPointInRange(clickPoint, highlightData.range)) {
-      // 移除这个高亮
-      const highlight = CSS.highlights.get('ai-highlights');
-      highlight.delete(highlightData.range);
-      highlights.delete(id);
-      
-      console.log('CSS Highlight removed by Ctrl+click:', id);
-      return true; // 返回true表示成功移除
+      return id;
     }
   }
-  return false; // 返回false表示没有找到高亮
+  return null;
+}
+
+// 🆕 通过ID移除高亮
+function removeHighlightById(highlightId) {
+  const highlightData = highlights.get(highlightId);
+  if (highlightData) {
+    // 移除CSS高亮
+    const highlight = CSS.highlights.get('ai-highlights');
+    highlight.delete(highlightData.range);
+    highlights.delete(highlightId);
+    
+    // 🆕 移除关联的评论数据
+    highlightComments.delete(highlightId);
+    
+    console.log('CSS Highlight and comment removed:', highlightId);
+    return true;
+  }
+  return false;
+}
+
+// 🆕 显示评论输入框（MVP：使用prompt）
+function showCommentInput(highlightId) {
+  const commentData = highlightComments.get(highlightId);
+  if (!commentData) {
+    console.error('Comment data not found for highlight:', highlightId);
+    return;
+  }
+  
+  // MVP方案：使用prompt输入框
+  const currentComment = commentData.comment || '';
+  const newComment = prompt(`为高亮文本添加评论：\n"${commentData.text}"`, currentComment);
+  
+  // 用户取消输入
+  if (newComment === null) {
+    console.log('Comment input cancelled');
+    return;
+  }
+  
+  // 更新评论数据
+  commentData.comment = newComment.trim();
+  commentData.hasComment = newComment.trim().length > 0;
+  commentData.timestamp = Date.now();
+  
+  // 控制台显示评论内容（满足验收标准）
+  console.log('评论已保存:', {
+    highlightId: highlightId,
+    text: commentData.text,
+    comment: commentData.comment,
+    hasComment: commentData.hasComment
+  });
+}
+
+// 移除CSS高亮（通过点击坐标）- 保留为兼容性
+function removeHighlightAtPoint(clickPoint) {
+  const highlightId = findHighlightAtPoint(clickPoint);
+  if (highlightId) {
+    return removeHighlightById(highlightId);
+  }
+  return false;
 }
 
 // 检查点击位置是否在范围内
@@ -270,15 +353,11 @@ function removeHighlightFallback(highlightElement) {
 document.addEventListener('keydown', function(e) {
   if (e.ctrlKey && e.key === 'z') {
     if (supportsHighlights && highlights.size > 0) {
-      // 移除最后一个CSS高亮
+      // 移除最后一个CSS高亮和评论
       const lastId = Math.max(...highlights.keys());
-      const highlightData = highlights.get(lastId);
+      removeHighlightById(lastId);
       
-      const highlight = CSS.highlights.get('ai-highlights');
-      highlight.delete(highlightData.range);
-      highlights.delete(lastId);
-      
-      console.log('CSS Highlight removed:', lastId);
+      console.log('CSS Highlight and comment removed by Ctrl+Z:', lastId);
       e.preventDefault();
     } else {
       // 回退方法

@@ -32,13 +32,27 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，旨在增强用户与AI�
 1. WHEN 存在高亮内容 THEN 系统 SHALL 显示"复制高亮内容"按钮
 2. WHEN 用户点击"复制高亮内容"按钮 THEN 系统 SHALL 将包含高亮标签的原文复制到剪贴板
 3. WHEN 复制高亮内容 THEN 系统 SHALL 保持原文的完整结构和上下文
-4. WHEN 复制高亮内容 THEN 格式 SHALL 为高亮部分用<highlight>标签包围的原文，如："原文内容包含<highlight>高亮部分</highlight>的完整句子"
+4. WHEN 复制高亮内容 THEN 格式 SHALL 为：
+   - 无评论的高亮：`<highlight>高亮文本</highlight>`
+   - 有评论的高亮：`<highlight comment="用户评论">高亮文本</highlight>`
+   - 示例："原文内容包含<highlight comment="这很重要">关键信息</highlight>的完整句子"
 
-### 需求3：Gemini平台兼容性（MVP）
+### 需求3：高亮文本评论功能
+**用户故事：** 作为用户，我希望能对高亮的文本添加个人评论，以便记录我对这段内容的思考和理解
+
+#### 验收标准
+1. WHEN 用户点击已高亮的文本 THEN 系统 SHALL 显示评论输入框
+2. WHEN 用户在评论框中输入文字并保存 THEN 系统 SHALL 将评论与该高亮文本关联存储
+3. WHEN 高亮文本存在评论 THEN 系统 SHALL 在高亮文本旁显示评论指示器（如小图标）
+4. WHEN 用户将鼠标悬停在有评论的高亮文本上 THEN 系统 SHALL 显示评论内容的工具提示
+5. WHEN 用户复制高亮内容 THEN 系统 SHALL 包含评论信息，格式为：`<highlight comment="用户评论">高亮文本</highlight>`
+6. WHEN 页面刷新 THEN 系统 SHALL 保持高亮文本及其关联的评论
+
+### 需求4：Gemini平台兼容性（MVP）
 **用户故事：** 作为Gemini用户，我希望插件能在Gemini平台正常工作
 
 #### 验收标准
-1. WHEN 用户访问gemini.google.com THEN 系统 SHALL 自动激活高亮功能
-2. WHEN Gemini界面加载完成 THEN 系统 SHALL 正确识别AI回复区域以便进行高亮
-3. WHEN 高亮功能激活 THEN 系统 SHALL 支持右键菜单和复制功能
+1. WHEN 用户访问gemini.google.com THEN 系统 SHALL 自动激活高亮和评论功能
+2. WHEN Gemini界面加载完成 THEN 系统 SHALL 正确识别AI回复区域以便进行高亮和评论
+3. WHEN 高亮功能激活 THEN 系统 SHALL 支持右键菜单、复制功能和评论功能
 

@@ -108,10 +108,67 @@ chrome.contextMenus.create({
 **重要修复：**
 - ✅ 高亮范围限制 - 只能在AI回复区域内高亮，避免在页面其他位置误操作
 
-### 🚧 可选增强功能（阶段4-6）
-- 数据持久化（页面刷新保持高亮）
-- 错误处理和边界情况
-- 动态内容监听优化
+### 🚧 阶段4评论功能验证 🆕
+
+**核心验证结果：**
+**✅ 完全可行 - 基于已有Chrome扩展API实现**
+
+#### 1. 点击事件监听 ✅
+- **API**: document.addEventListener('click', handler)
+- **验证**: Chrome扩展content script原生支持
+- **示例**:
+```javascript
+document.addEventListener('click', (event) => {
+  if (isHighlightElement(event.target)) {
+    const comment = prompt('添加评论:');
+    console.log('评论:', comment);
+  }
+});
+```
+
+#### 2. 评论数据存储 ✅
+- **API**: window对象内存存储
+- **验证**: 已有高亮数据存储机制可直接扩展
+- **示例**:
+```javascript
+window.highlightComments = new Map();
+window.highlightComments.set(highlightId, {
+  text: '高亮文本',
+  comment: '用户评论',
+  timestamp: Date.now()
+});
+```
+
+#### 3. 复制内容格式化 ✅
+- **API**: 字符串模板和正则替换
+- **验证**: 已有复制逻辑可直接扩展
+- **示例**:
+```javascript
+function generateCommentText(text, comment) {
+  return comment ? 
+    `<highlight comment="${comment}">${text}</highlight>` :
+    `<highlight>${text}</highlight>`;
+}
+```
+
+#### 4. UI输入框显示 ✅
+- **API**: prompt() 或 动态DOM创建
+- **验证**: Chrome扩展可注入任意DOM
+- **示例**:
+```javascript
+// 方案1: MVP用prompt
+const comment = prompt('添加评论:');
+
+// 方案2: 自定义浮动框
+const input = document.createElement('div');
+input.innerHTML = '<input type="text"><button>保存</button>';
+document.body.appendChild(input);
+```
+
+**技术路径确认：**
+- 任务8: 点击监听 + prompt输入 + 控制台输出 (2小时)
+- 任务9: 扩展复制逻辑 + 评论格式化 (3小时)  
+- 任务10-12: DOM UI + CSS样式 + 悬停效果 (4-6小时)
 
 ## 结论
-**🟢 核心功能已验证可行 - 可继续后续开发**
+**🟢 低风险，立即可行 - 无技术阻碍，评论功能可直接开始实现**
