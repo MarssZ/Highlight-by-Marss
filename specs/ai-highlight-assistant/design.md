@@ -2,138 +2,88 @@
 
 ## 概述
 
-AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在Gemini平台的AI回复中高亮重要文本，并通过剪贴板复制包含高亮标记的完整AI回复内容。采用简化的复制粘贴方案，避免复杂的DOM操作，提高稳定性和通用性。
+AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在Gemini平台的AI回复中高亮重要文本，并通过劫持原生复制按钮来复制包含高亮标记的完整AI回复内容。
 
-## 架构设计
+**MVP已实现的核心功能：**
+- ✅ 在AI回复区域内选中文本立即高亮（CSS.highlights API + 智能降级）
+- ✅ Ctrl+点击移除高亮，Ctrl+Z撤销高亮
+- ✅ 劫持AI回复原生复制按钮，智能生成带`<highlight>`标签的内容
+- ✅ 高亮范围限制在AI回复区域，避免误操作
+
+## 架构设计（MVP实现）
 
 ```mermaid
 graph TD
     A[Gemini网页] --> B[Content Script]
-    B --> C[Storage Manager]
-    B --> D[UI Components]
-    D --> E[右键菜单]
-    D --> F[复制按钮]
-    B --> G[Clipboard API]
-    C --> H[Chrome Storage]
+    A --> C[Copy Enhancer]
+    B --> D[CSS.highlights API]
+    B --> E[高亮范围检查]
+    C --> F[复制按钮劫持]
+    C --> G[智能内容生成]
+    C --> H[Clipboard API]
 ```
 
 ## 核心组件
 
-### 1. Content Script (`content.js`)
-负责在Gemini页面中注入功能逻辑
+### 1. Content Script (`content.js`) ✅ 已实现
+负责高亮功能的核心逻辑
 
 **职责：**
-- 监听页面加载，识别AI回复区域
-- 处理文本选中和右键菜单事件
-- 管理高亮样式的添加和移除
-- 在包含高亮的AI回复右上角显示复制按钮
-- 生成包含高亮标记的完整AI回复文本并复制到剪贴板
-- 页面刷新后恢复高亮状态
+- 监听AI回复区域内的文本选择
+- 使用CSS.highlights API应用高亮（支持跨元素）
+- 智能降级到传统DOM高亮
+- Ctrl+点击移除高亮，Ctrl+Z撤销
+- 限制高亮范围在AI回复容器内
 
 **关键方法：**
 ```javascript
-// 添加高亮
-addHighlight(selectedText, range)
-// 移除高亮  
-removeHighlight(highlightId)
-// 复制整个AI回复（含高亮标记）
-copyMessageWithHighlights(messageId)
-// 恢复高亮状态
-restoreHighlights()
-// 显示/隐藏复制按钮
-toggleCopyButton(messageElement, hasHighlights)
+// 检查选择范围
+isSelectionInAIResponse(selection)
+// CSS高亮
+applyHighlightCSS(selection)
+// 传统高亮（降级）
+applyHighlightFallback(selection)
+// 移除高亮
+removeHighlightAtPoint(clickPoint)
 ```
 
-### 2. Storage Manager (`storage.js`)
-管理高亮数据的持久化存储
+### 2. Copy Enhancer (`copy-enhancer.js`) ✅ 已实现
+负责劫持和增强原生复制功能
 
-**数据结构：**
-```javascript
-{
-  conversations: {
-    [conversationId]: {  // 基于URL路径提取的对话ID
-      messages: {
-        [messageHash]: {  // 基于消息内容的hash
-          content: string,        // 完整消息内容
-          highlights: [
-            {
-              id: string,
-              text: string,
-              startOffset: number,
-              endOffset: number,
-              timestamp: number
-            }
-          ],
-          lastUpdated: timestamp
-        }
-      }
-    }
-  }
-}
-```
+**职责：**
+- 精确识别AI回复的复制按钮（`data-test-id="copy-button"`）
+- 监听复制按钮点击事件
+- 检测消息容器中的高亮内容
+- 生成带`<highlight>`标签的增强文本
+- 覆写剪贴板内容
 
 **关键方法：**
 ```javascript
-saveHighlight(conversationId, messageHash, highlightData)
-getHighlights(conversationId, messageHash)
-removeHighlight(conversationId, messageHash, highlightId)
-clearHighlights(conversationId, messageHash)
-generateConversationId(url)
-generateMessageHash(content)
+// 识别复制按钮
+findAndSetupCopyButtons()
+// 处理复制点击
+handleCopyButtonClick(button, event)
+// 生成增强内容
+generateHighlightedText(container)
+// 剪贴板操作
+copyToClipboard(text)
 ```
 
-### 3. UI Components (`ui.js`)
-处理用户界面元素
+## 数据模型（MVP简化版）
 
-**组件：**
-- **右键菜单项** - "高亮选中文本" / "取消高亮"
-- **复制按钮** - 显示在包含高亮的AI回复右上角，样式类似聊天应用的消息操作按钮
-- **通知提示** - 复制成功的反馈
-
-**复制按钮设计：**
-- 位置：AI回复容器右上角
-- 样式：半透明圆形图标，hover时高亮
-- 显示条件：仅当AI回复包含高亮内容时显示
-- 图标：复制/剪贴板图标
-
-### 4. Platform Adapter (`gemini-adapter.js`)
-Gemini平台特定的DOM选择器和逻辑
-
-**职责：**
-- 识别AI回复容器
-- 生成唯一的消息ID
-- 处理Gemini特有的DOM结构
-
-## 数据模型
-
-### 高亮数据存储示例
+### 内存中高亮数据存储
 ```javascript
+// window.highlights Map存储
 {
-  conversations: {
-    "gemini-chat-abc123": {
-      messages: {
-        "hash-def456": {
-          content: "机器学习中，决策树容易理解，随机森林准确率高，但神经网络需要更多数据。",
-          highlights: [
-            {
-              id: "highlight-uuid-1",
-              text: "决策树",
-              startOffset: 6,
-              endOffset: 9,
-              timestamp: 1640995200000
-            },
-            {
-              id: "highlight-uuid-2", 
-              text: "神经网络",
-              startOffset: 25,
-              endOffset: 29,
-              timestamp: 1640995300000
-            }
-          ],
-          lastUpdated: 1640995300000
-        }
-      }
-    }
+  1: {
+    range: Range对象,
+    text: "决策树", 
+    timestamp: 1640995200000
+  },
+  2: {
+    range: Range对象,
+    text: "神经网络",
+    timestamp: 1640995300000
   }
 }
 ```
@@ -143,102 +93,78 @@ Gemini平台特定的DOM选择器和逻辑
 机器学习中，<highlight>决策树</highlight>容易理解，随机森林准确率高，但<highlight>神经网络</highlight>需要更多数据。
 ```
 
-## 核心流程
+## 核心流程（MVP实现）
 
-### 1. 高亮文本流程
+### 1. 高亮文本流程 ✅
 ```mermaid
 sequenceDiagram
     participant U as 用户
     participant C as Content Script
-    participant S as Storage
-    participant UI as UI Components
+    participant H as CSS.highlights
     
-    U->>C: 选中文本并右键
-    C->>C: 显示高亮菜单项
-    U->>C: 点击"高亮文本"
-    C->>C: 添加高亮样式
-    C->>C: 生成高亮数据
-    C->>S: 保存高亮数据
-    C->>UI: 显示复制按钮
-    C->>U: 显示高亮效果
+    U->>C: 在AI回复区域选中文本
+    C->>C: 检查选择范围是否在AI回复内
+    C->>C: 立即应用CSS高亮
+    C->>H: 添加到highlights注册表
+    C->>U: 显示黄色高亮效果
 ```
 
-### 2. 复制完整AI回复流程
+### 2. 智能复制流程 ✅
 ```mermaid
 sequenceDiagram
     participant U as 用户
+    participant E as Copy Enhancer
     participant C as Content Script
-    participant S as Storage
     participant CB as Clipboard
     
-    U->>C: 点击AI回复的复制按钮
-    C->>S: 获取该回复的高亮数据
-    S->>C: 返回高亮数据
-    C->>C: 生成带高亮标签的完整回复文本
-    C->>CB: 复制到剪贴板
-    C->>U: 显示复制成功提示
+    U->>E: 点击AI回复的复制按钮
+    E->>E: 检测消息容器中的高亮
+    E->>E: 生成带<highlight>标签的文本
+    E->>CB: 覆写剪贴板内容
+    E->>U: 控制台显示复制成功
 ```
 
-### 3. 页面恢复高亮流程
+### 3. 移除高亮流程 ✅
 ```mermaid
 sequenceDiagram
-    participant P as 页面加载
+    participant U as 用户
     participant C as Content Script
-    participant S as Storage
-    participant UI as UI Components
+    participant H as CSS.highlights
     
-    P->>C: 页面加载完成
-    C->>C: 识别AI回复区域
-    C->>S: 获取当前页面高亮数据
-    S->>C: 返回高亮数据
-    C->>C: 重新应用高亮样式
-    C->>UI: 为有高亮的回复显示复制按钮
+    U->>C: Ctrl+点击高亮文本 或 Ctrl+Z
+    C->>C: 检测点击位置或获取最后高亮
+    C->>H: 从highlights注册表中移除
+    C->>U: 高亮效果消失
 ```
 
-## 错误处理
+## 技术决策（MVP实现）
 
-### 1. DOM结构变化
-- **问题：** Gemini更新导致选择器失效
-- **处理：** 使用多重选择器fallback，记录错误日志
+### 1. 为什么选择CSS.highlights API？
+- **无DOM污染：** 不修改页面HTML结构，性能更佳
+- **跨元素支持：** 原生支持复杂文本选择，解决surroundContents问题
+- **现代化：** Chrome原生API，专为高亮场景设计
+- **智能降级：** 不支持时自动降级到传统DOM方法
 
-### 2. 存储失败
-- **问题：** Chrome Storage API调用失败
-- **处理：** 降级到sessionStorage，提示用户
+### 2. 为什么劫持原生复制按钮而不是创建新UI？
+- **用户习惯：** 保持原有操作流程，学习成本为零
+- **界面简洁：** 不添加额外UI元素，不影响页面布局
+- **稳定性：** 不依赖自定义UI的显示/隐藏逻辑
+- **未来兼容：** 当Gemini UI更新时影响最小
 
-### 3. 复制失败
-- **问题：** Clipboard API不可用或被阻止
-- **处理：** 降级到document.execCommand，显示手动复制提示
+### 3. 为什么限制高亮范围在AI回复区域？
+- **精确定位：** 只在有意义的内容区域工作
+- **避免误操作：** 防止在侧边栏、输入框等地方误触
+- **符合使用场景：** 用户只需要高亮AI的回复内容
 
-## 测试策略
+## 当前限制与未来增强
 
-### 1. 单元测试
-- Storage Manager的数据操作
-- 高亮数据生成和格式化逻辑
-- 完整回复文本标记生成功能
+### MVP有意简化的功能
+- **数据持久化：** 当前高亮数据存储在内存中，页面刷新后丢失
+- **高亮管理：** 没有批量删除、导出等管理功能
+- **多平台支持：** 当前只支持Gemini，未来可扩展到其他AI平台
 
-### 2. 集成测试
-- 在Gemini页面的端到端高亮流程
-- 复制按钮的显示/隐藏逻辑
-- 页面刷新后的恢复功能
-- 复制完整回复到剪贴板的流程
-
-### 3. 兼容性测试
-- 不同Chrome版本的API兼容性
-- Gemini页面结构变化的适应性
-
-## 技术决策
-
-### 1. 为什么选择剪贴板复制而不是自动插入？
-- **简单性：** 避免复杂的DOM操作和输入框识别
-- **稳定性：** 不依赖具体的页面结构，更少的失效风险
-- **通用性：** 未来扩展到其他AI平台更容易
-
-### 2. 为什么使用Chrome Storage而不是LocalStorage？
-- **持久性：** 扩展卸载重装后数据不丢失
-- **跨标签页：** 多个Gemini标签页共享高亮数据
-- **配额：** 更大的存储空间
-
-### 3. 复制按钮的UI设计原则
-- **上下文相关：** 只在有高亮内容时显示，明确表示操作范围
-- **熟悉性：** 模仿聊天应用的消息操作按钮，用户容易理解
-- **非干扰性：** 半透明设计，不影响阅读体验
+### 后续可选增强
+- Chrome Storage持久化存储
+- 高亮数据导入/导出
+- 快捷键自定义
+- 多主题高亮颜色

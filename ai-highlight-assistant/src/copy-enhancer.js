@@ -118,7 +118,7 @@ function setupCopyButtonListener(button) {
     // 延迟处理，让原始复制操作先完成
     setTimeout(() => {
       handleCopyButtonClick(button, event);
-    }, 50);
+    }, 200); // 增加延迟确保原始复制完成
   }, true);
 }
 
@@ -143,9 +143,13 @@ function handleCopyButtonClick(button, event) {
       const enhancedContent = generateHighlightedText(messageContainer);
       
       if (enhancedContent) {
+        console.log('📝 Generated enhanced content:', enhancedContent);
+        
         // 覆写剪贴板内容
         copyToClipboard(enhancedContent);
         console.log('📋 Enhanced content copied to clipboard');
+      } else {
+        console.log('❌ Failed to generate enhanced content');
       }
     } else {
       console.log('📄 Message has no highlights, using default copy');
