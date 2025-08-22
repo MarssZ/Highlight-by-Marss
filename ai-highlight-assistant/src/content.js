@@ -24,6 +24,27 @@ function initExtension() {
     if (supportsHighlights) {
       CSS.highlights.set('ai-highlights', new Highlight());
       console.log('CSS.highlights initialized');
+      
+      // 将highlights暴露给copy-enhancer使用
+      window.highlights = highlights;
+    }
+    
+    // 初始化复制增强功能
+    console.log('Checking window.copyEnhancer:', !!window.copyEnhancer);
+    if (window.copyEnhancer) {
+      console.log('copyEnhancer found, calling init in 1 second');
+      setTimeout(() => {
+        window.copyEnhancer.init();
+      }, 1000); // 延迟1秒确保页面加载完成
+    } else {
+      console.log('copyEnhancer not found, will retry');
+      // 如果没找到，继续重试
+      setTimeout(() => {
+        console.log('Retry: checking window.copyEnhancer:', !!window.copyEnhancer);
+        if (window.copyEnhancer) {
+          window.copyEnhancer.init();
+        }
+      }, 2000);
     }
   }
 }
