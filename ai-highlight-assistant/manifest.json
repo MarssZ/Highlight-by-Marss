@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "AI Highlight Assistant",
+  "version": "1.0.0",
+  "description": "在AI聊天平台中高亮重要内容并复制带标记的回复",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://gemini.google.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["src/content.js"],
+      "css": ["styles/content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_title": "AI Highlight Assistant"
+  }
+}
