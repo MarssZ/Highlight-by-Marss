@@ -3,6 +3,9 @@
 ## 核心验证结果
 **✅ 方案技术可行，Chrome扩展API完全支持所需功能**
 
+## 最新进展（2025-01-22）
+**✅ 阶段1-2已完成，核心高亮功能已实现并验证成功**
+
 ## 关键技术验证
 
 ### 1. Chrome Extensions API
@@ -13,14 +16,23 @@
 
 ### 2. 核心功能验证
 
-#### 文本高亮
+#### 文本高亮 ✅ 已实现
 ```javascript
-// 基础高亮实现
-const range = window.getSelection().getRangeAt(0);
+// CSS.highlights API实现（支持跨元素选择）
+const range = selection.getRangeAt(0).cloneRange();
+const highlight = CSS.highlights.get('ai-highlights');
+highlight.add(range);
+
+// 回退方法（传统DOM包装）
 const span = document.createElement('span');
-span.style.backgroundColor = 'yellow';
+span.className = 'ai-highlight-fallback';
 range.surroundContents(span);
 ```
+
+**解决的技术问题：**
+- ❌ `surroundContents()` 跨元素选择失败
+- ✅ 使用CSS.highlights API完美解决
+- ✅ 智能降级到传统方法
 
 #### Chrome Storage
 ```javascript
@@ -38,14 +50,20 @@ navigator.clipboard.writeText(highlightedText).then(() => {
 });
 ```
 
-#### 右键菜单
+#### 右键菜单 ❌ 已跳过
 ```javascript
+// 原计划实现
 chrome.contextMenus.create({
   id: "highlight-text",
   title: "高亮选中文本", 
   contexts: ["selection"]
 });
 ```
+
+**设计决策变更：**
+- ❌ 右键菜单增加操作复杂度
+- ✅ 选中即高亮更直观
+- ✅ Ctrl+点击移除，避免误触
 
 ### 3. 必需配置
 
@@ -71,5 +89,17 @@ chrome.contextMenus.create({
 - Gemini DOM结构可能变化，需要选择器适配
 - 需要处理文本选择范围跨越多个元素的情况
 
+## 实施状态
+
+### ✅ 已完成阶段
+1. **基础架构** - Chrome扩展基础文件
+2. **文本高亮** - CSS.highlights API + 智能降级
+3. **高亮控制** - Ctrl+点击移除 + Ctrl+Z撤销
+
+### 🚧 下一阶段
+4. **AI回复识别** - Gemini页面适配
+5. **复制按钮UI** - 显示复制操作
+6. **剪贴板功能** - 生成带标签的文本
+
 ## 结论
-**🟢 建议立即实施 - 技术风险极低，API支持完善**
+**🟢 核心功能已验证可行 - 可继续后续开发**

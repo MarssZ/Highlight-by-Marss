@@ -1,8 +1,22 @@
 /* AI Highlight Assistant - Content Styles */
 
-.ai-highlight {
+/* CSS.highlights API 高亮样式 */
+::highlight(ai-highlights) {
+  background-color: #ffeb3b;
+  color: #000;
+  cursor: pointer;
+}
+
+/* 回退方法的高亮样式 */
+.ai-highlight-fallback {
   background-color: #ffeb3b !important;
   color: #000 !important;
   padding: 0 2px;
   border-radius: 2px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ai-highlight-fallback:hover {
+  background-color: #ffc107 !important;
 }
