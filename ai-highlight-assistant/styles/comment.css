@@ -203,8 +203,54 @@
   }
 }
 
+/* 评论指示器样式 - 内联版本，跟随文本流 */
+.ai-comment-indicator {
+  display: inline;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  animation: ai-indicator-appear 0.3s ease-out;
+  margin-left: 1px;
+  vertical-align: baseline;
+  /* 移除所有定位相关样式，让指示器自然跟随文本 */
+}
+
+.ai-comment-indicator:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.ai-comment-indicator:active {
+  transform: scale(0.95);
+}
+
+/* 指示器出现动画 */
+@keyframes ai-indicator-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
 /* 深色模式支持 (如果Gemini使用深色主题) */
 @media (prefers-color-scheme: dark) {
+  /* 深色模式下的指示器样式 */
+  .ai-comment-indicator {
+    color: #e8eaed;
+    opacity: 0.9;
+  }
+  
+  .ai-comment-indicator:hover {
+    opacity: 1;
+  }
   .ai-comment-dialog {
     background: #2d2e30;
     border-color: #5f6368;

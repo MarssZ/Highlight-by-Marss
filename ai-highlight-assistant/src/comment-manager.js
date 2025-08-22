@@ -37,7 +37,7 @@ function createCommentDialog(highlightId, highlightText, currentComment, positio
   // 对话框HTML结构
   dialog.innerHTML = `
     <div class="ai-comment-header">
-      <span class="ai-comment-icon">💬</span>
+      <span class="ai-comment-icon">🔖</span>
       <span class="ai-comment-title">${truncateText(highlightText, 35)}</span>
     </div>
     <div class="ai-comment-input-container">
@@ -195,6 +195,9 @@ function saveComment(highlightId, comment) {
         hasComment: commentData.hasComment
       });
       
+      // 🆕 更新评论指示器
+      updateCommentIndicator(highlightId);
+      
       // 成功提示
       showSaveSuccess();
     } else {
@@ -267,8 +270,157 @@ function showCommentInputDialog(highlightId, clickPosition) {
   );
 }
 
+// 🆕 创建评论指示器
+function createCommentIndicator(highlightId) {
+  const indicator = document.createElement('span');
+  indicator.className = 'ai-comment-indicator';
+  indicator.setAttribute('data-highlight-id', highlightId);
+  indicator.innerHTML = '🔖';
+  
+  // 获取实际评论内容作为悬停提示
+  const commentData = window.highlightComments?.get(highlightId);
+  if (commentData && commentData.comment) {
+    // 限制tooltip长度，避免过长
+    const tooltipText = commentData.comment.length > 100 
+      ? commentData.comment.substring(0, 100) + '...'
+      : commentData.comment;
+    indicator.title = `🔖 ${tooltipText}`;
+  } else {
+    indicator.title = '🔖 点击查看评论';
+  }
+  
+  // 添加点击事件 - 点击指示器也能编辑评论
+  indicator.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const clickPosition = { x: e.clientX, y: e.clientY };
+    showCommentInputDialog(highlightId, clickPosition);
+  });
+  
+  return indicator;
+}
+
+// 🆕 更新指定高亮的评论指示器
+function updateCommentIndicator(highlightId) {
+  if (!window.highlightComments || !window.highlights) {
+    return;
+  }
+  
+  const commentData = window.highlightComments.get(highlightId);
+  const highlightData = window.highlights.get(highlightId);
+  
+  if (!commentData || !highlightData) {
+    return;
+  }
+  
+  // 移除现有指示器
+  removeCommentIndicator(highlightId);
+  
+  // 如果有评论，创建新指示器
+  if (commentData.hasComment && commentData.comment.trim()) {
+    const indicator = createCommentIndicator(highlightId);
+    insertIndicatorInline(indicator, highlightData.range);
+    
+    console.log('Comment indicator added for highlight:', highlightId);
+  } else {
+    console.log('Comment indicator removed for highlight:', highlightId);
+  }
+}
+
+// 🆕 将指示器插入到高亮范围后面（内联方式）
+function insertIndicatorInline(indicator, range) {
+  try {
+    // 创建一个新的范围，定位到原范围的结束位置
+    const endRange = range.cloneRange();
+    endRange.collapse(false); // 折叠到结束位置
+    
+    // 在结束位置插入指示器
+    endRange.insertNode(indicator);
+    
+    console.log('Comment indicator inserted inline');
+    
+  } catch (error) {
+    console.error('Error inserting inline indicator:', error);
+    
+    // 降级方案：尝试在范围结束节点后插入
+    try {
+      const endContainer = range.endContainer;
+      const endOffset = range.endOffset;
+      
+      if (endContainer.nodeType === Node.TEXT_NODE) {
+        const parent = endContainer.parentNode;
+        const nextSibling = endContainer.nextSibling;
+        
+        if (nextSibling) {
+          parent.insertBefore(indicator, nextSibling);
+        } else {
+          parent.appendChild(indicator);
+        }
+      } else {
+        endContainer.appendChild(indicator);
+      }
+      
+      console.log('Comment indicator inserted using fallback method');
+      
+    } catch (fallbackError) {
+      console.error('Fallback insertion also failed:', fallbackError);
+    }
+  }
+}
+
+// 🆕 移除指定高亮的评论指示器
+function removeCommentIndicator(highlightId) {
+  const existingIndicator = document.querySelector(`.ai-comment-indicator[data-highlight-id="${highlightId}"]`);
+  if (existingIndicator && existingIndicator.parentNode) {
+    existingIndicator.parentNode.removeChild(existingIndicator);
+  }
+}
+
+// 🆕 更新所有评论指示器（只在必要时重建）
+function updateAllCommentIndicators() {
+  if (!window.highlightComments || !window.highlights) {
+    return;
+  }
+  
+  console.log('Rebuilding all comment indicators...');
+  
+  // 移除所有现有指示器
+  const existingIndicators = document.querySelectorAll('.ai-comment-indicator');
+  existingIndicators.forEach(indicator => {
+    if (indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  });
+  
+  // 重新创建有评论的指示器
+  for (const [highlightId, commentData] of window.highlightComments) {
+    if (commentData.hasComment && commentData.comment.trim()) {
+      const highlightData = window.highlights.get(highlightId);
+      if (highlightData) {
+        const indicator = createCommentIndicator(highlightId);
+        insertIndicatorInline(indicator, highlightData.range);
+      }
+    }
+  }
+  
+  console.log('All comment indicators rebuilt');
+}
+
+// 🆕 初始化评论指示器系统
+function initCommentIndicators() {
+  // 延迟初始化，确保其他系统都已准备好
+  setTimeout(() => {
+    updateAllCommentIndicators();
+  }, 1000);
+  
+  console.log('Comment indicators system initialized');
+}
+
 // 导出函数供content.js调用
 window.commentManager = {
   showCommentInput: showCommentInputDialog,
-  removeDialog: removeCommentDialog
+  removeDialog: removeCommentDialog,
+  updateIndicator: updateCommentIndicator,
+  updateAllIndicators: updateAllCommentIndicators,
+  removeIndicator: removeCommentIndicator,
+  init: initCommentIndicators
 };

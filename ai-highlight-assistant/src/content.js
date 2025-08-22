@@ -53,6 +53,14 @@ function initExtension() {
         }
       }, 2000);
     }
+    
+    // 🆕 初始化评论指示器系统
+    setTimeout(() => {
+      if (window.commentManager && window.commentManager.init) {
+        window.commentManager.init();
+        console.log('Comment indicators initialized');
+      }
+    }, 2000);
   }
 }
 
@@ -269,10 +277,15 @@ function removeHighlightById(highlightId) {
     highlight.delete(highlightData.range);
     highlights.delete(highlightId);
     
-    // 🆕 移除关联的评论数据
+    // 🆕 移除关联的评论数据和指示器
     highlightComments.delete(highlightId);
     
-    console.log('CSS Highlight and comment removed:', highlightId);
+    // 🆕 移除评论指示器
+    if (window.commentManager && window.commentManager.removeIndicator) {
+      window.commentManager.removeIndicator(highlightId);
+    }
+    
+    console.log('CSS Highlight, comment and indicator removed:', highlightId);
     return true;
   }
   return false;
