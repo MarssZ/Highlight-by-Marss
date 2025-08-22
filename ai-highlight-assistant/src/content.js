@@ -66,7 +66,14 @@ function handleTextSelection(event) {
   
   if (selection.rangeCount > 0 && selection.toString().trim().length > 0) {
     const selectedText = selection.toString().trim();
-    console.log('Text selected:', selectedText);
+    
+    // 检查选择是否在AI回复区域内
+    if (!isSelectionInAIResponse(selection)) {
+      console.log('Selection outside AI response area, ignoring');
+      return;
+    }
+    
+    console.log('Text selected in AI response:', selectedText);
     
     // 立即应用高亮效果
     if (supportsHighlights) {
@@ -76,6 +83,55 @@ function handleTextSelection(event) {
       applyHighlightFallback(selection);
     }
   }
+}
+
+// 检查选择是否在AI回复区域内
+function isSelectionInAIResponse(selection) {
+  try {
+    const range = selection.getRangeAt(0);
+    const commonAncestor = range.commonAncestorContainer;
+    
+    // 从选择的公共祖先开始，向上查找AI回复容器
+    let element = commonAncestor.nodeType === Node.TEXT_NODE ? 
+                  commonAncestor.parentElement : commonAncestor;
+    
+    while (element && element !== document.body) {
+      // 检查是否是AI回复的主要容器
+      if (isAIResponseContainer(element)) {
+        return true;
+      }
+      element = element.parentElement;
+    }
+    
+    return false;
+  } catch (error) {
+    console.log('Error checking selection area:', error);
+    return false;
+  }
+}
+
+// 判断元素是否是AI回复容器
+function isAIResponseContainer(element) {
+  if (!element || !element.classList) {
+    return false;
+  }
+  
+  // 检查class包含AI回复的标识
+  const classList = element.classList;
+  const hasMarkdownClass = classList.contains('markdown') && 
+                           classList.contains('markdown-main-panel');
+  
+  // 检查id是否符合AI回复消息的模式
+  const elementId = element.id || '';
+  const hasAIResponseId = elementId.includes('model-response-message-content');
+  
+  // 检查其他可能的AI回复容器标识
+  const hasResponseClass = classList.contains('model-response') ||
+                           classList.contains('response-content') ||
+                           element.closest('[class*="model-response"]') ||
+                           element.closest('[class*="response-content"]');
+  
+  return hasMarkdownClass || hasAIResponseId || hasResponseClass;
 }
 
 // 使用CSS.highlights API应用高亮
