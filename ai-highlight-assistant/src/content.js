@@ -241,7 +241,8 @@ function handleHighlightClick(event) {
         }
         
         // 普通点击：添加评论
-        showCommentInput(highlightId);
+        const clickPosition = { x: event.clientX, y: event.clientY };
+        showCommentInput(highlightId, clickPosition);
         event.preventDefault();
         event.stopPropagation();
       }
@@ -277,19 +278,33 @@ function removeHighlightById(highlightId) {
   return false;
 }
 
-// 🆕 显示评论输入框（MVP：使用prompt）
-function showCommentInput(highlightId) {
+// 🆕 显示评论输入框（专业UI版本）
+function showCommentInput(highlightId, clickPosition = null) {
   const commentData = highlightComments.get(highlightId);
   if (!commentData) {
     console.error('Comment data not found for highlight:', highlightId);
     return;
   }
   
-  // MVP方案：使用prompt输入框
+  // 检查comment manager是否可用
+  if (window.commentManager && window.commentManager.showCommentInput) {
+    // 使用专业UI对话框
+    window.commentManager.showCommentInput(highlightId, clickPosition || { x: 0, y: 0 });
+  } else {
+    // 降级到prompt方案
+    console.log('Comment manager not available, using fallback prompt');
+    showCommentInputFallback(highlightId);
+  }
+}
+
+// 降级方案：使用prompt输入框
+function showCommentInputFallback(highlightId) {
+  const commentData = highlightComments.get(highlightId);
+  if (!commentData) return;
+  
   const currentComment = commentData.comment || '';
   const newComment = prompt(`为高亮文本添加评论：\n"${commentData.text}"`, currentComment);
   
-  // 用户取消输入
   if (newComment === null) {
     console.log('Comment input cancelled');
     return;
@@ -300,8 +315,7 @@ function showCommentInput(highlightId) {
   commentData.hasComment = newComment.trim().length > 0;
   commentData.timestamp = Date.now();
   
-  // 控制台显示评论内容（满足验收标准）
-  console.log('评论已保存:', {
+  console.log('评论已保存 (fallback):', {
     highlightId: highlightId,
     text: commentData.text,
     comment: commentData.comment,

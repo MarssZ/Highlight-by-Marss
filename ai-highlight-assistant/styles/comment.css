@@ -1,0 +1,251 @@
+/* AI Highlight Assistant - Comment UI Styles */
+
+/* 评论对话框主容器 */
+.ai-comment-dialog {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+              0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8eaed;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  font-family: 'Google Sans', 'Roboto', sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  animation: ai-comment-dialog-enter 0.2s ease-out;
+}
+
+/* 对话框进入动画 */
+@keyframes ai-comment-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 对话框头部 */
+.ai-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 0 16px;
+  color: #3c4043;
+}
+
+.ai-comment-icon {
+  font-size: 16px;
+}
+
+.ai-comment-title {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* 标题文本样式优化 */
+.ai-comment-title {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 输入容器 */
+.ai-comment-input-container {
+  padding: 0 16px;
+  position: relative;
+}
+
+/* 输入框 */
+.ai-comment-input {
+  width: 100%;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 60px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.ai-comment-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 1px #1a73e8;
+}
+
+.ai-comment-input::placeholder {
+  color: #9aa0a6;
+}
+
+/* 字符计数 */
+.ai-comment-char-count {
+  position: absolute;
+  bottom: -20px;
+  right: 16px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.ai-char-current {
+  color: #3c4043;
+}
+
+/* 操作按钮区域 */
+.ai-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 24px 16px 16px 16px;
+}
+
+/* 按钮基础样式 */
+.ai-comment-actions button {
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 64px;
+}
+
+/* 取消按钮 */
+.ai-comment-cancel {
+  background: transparent;
+  color: #1a73e8;
+}
+
+.ai-comment-cancel:hover {
+  background: rgba(26, 115, 232, 0.08);
+}
+
+.ai-comment-cancel:active {
+  background: rgba(26, 115, 232, 0.12);
+}
+
+/* 保存按钮 */
+.ai-comment-save {
+  background: #1a73e8;
+  color: white;
+}
+
+.ai-comment-save:hover {
+  background: #1557b0;
+  box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);
+}
+
+.ai-comment-save:active {
+  background: #0f4c8c;
+}
+
+.ai-comment-save:disabled {
+  background: #dadce0;
+  color: #9aa0a6;
+  cursor: not-allowed;
+}
+
+/* 成功提示 Toast */
+.ai-comment-toast {
+  background: #137333;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: 'Google Sans', 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: ai-toast-enter 0.3s ease-out, 
+             ai-toast-exit 0.3s ease-in 2.7s forwards;
+  white-space: nowrap;
+}
+
+/* Toast 动画 */
+@keyframes ai-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes ai-toast-exit {
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .ai-comment-dialog {
+    width: calc(100vw - 20px);
+    margin: 0 10px;
+  }
+  
+  .ai-comment-title {
+    max-width: 240px;
+  }
+  
+  .ai-comment-input {
+    min-height: 50px;
+  }
+}
+
+/* 深色模式支持 (如果Gemini使用深色主题) */
+@media (prefers-color-scheme: dark) {
+  .ai-comment-dialog {
+    background: #2d2e30;
+    border-color: #5f6368;
+    color: #e8eaed;
+  }
+  
+  .ai-comment-header {
+    color: #e8eaed;
+  }
+  
+  /* 深色模式下标题样式保持不变 */
+  
+  .ai-comment-input {
+    background: #35363a;
+    border-color: #5f6368;
+    color: #e8eaed;
+  }
+  
+  .ai-comment-input:focus {
+    border-color: #8ab4f8;
+    box-shadow: 0 0 0 1px #8ab4f8;
+  }
+  
+  .ai-comment-input::placeholder {
+    color: #9aa0a6;
+  }
+  
+  .ai-comment-cancel {
+    color: #8ab4f8;
+  }
+  
+  .ai-comment-cancel:hover {
+    background: rgba(138, 180, 248, 0.08);
+  }
+  
+  .ai-comment-save {
+    background: #8ab4f8;
+    color: #202124;
+  }
+  
+  .ai-comment-save:hover {
+    background: #aecbfa;
+  }
+}
