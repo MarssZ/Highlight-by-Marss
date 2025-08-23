@@ -130,13 +130,27 @@ function isSelectionInAIResponse(selection) {
 
 // 初始化平台适配器
 function initPlatformAdapter() {
-  if (window.GeminiAdapter) {
+  if (window.PlatformAdapterFactory) {
     try {
-      platformAdapter = new window.GeminiAdapter();
-      window.platformAdapter = platformAdapter; // 同步到全局
-      if (platformAdapter.detectPlatform()) {
+      const factory = new window.PlatformAdapterFactory();
+      
+      // 注册所有可用的适配器
+      if (window.GeminiAdapter) {
+        factory.register(new window.GeminiAdapter());
+      }
+      if (window.ClaudeAdapter) {
+        factory.register(new window.ClaudeAdapter());
+      }
+      
+      // 检测当前平台并加载适配器
+      platformAdapter = factory.detectAndLoad();
+      
+      if (platformAdapter) {
+        window.platformAdapter = platformAdapter; // 同步到全局
         console.log('✅ Platform adapter initialized:', platformAdapter.getPlatformName());
         return true;
+      } else {
+        console.warn('❌ No suitable platform adapter found for:', window.location.hostname);
       }
     } catch (error) {
       console.warn('Error initializing platform adapter:', error);

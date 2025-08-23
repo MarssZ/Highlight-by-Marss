@@ -164,23 +164,27 @@
   - [x] 23.1 替换isAIResponseContainer为adapter调用
   - [x] 23.2 添加适配器初始化逻辑
 
-## 5C. 扩展配置（状态验证）
+## 5C. 扩展配置（具象化单平台验证策略）
 
-- [ ] 24. 更新Chrome扩展支持多域名
-  - 需求：REQ-4.4 扩展权限配置  
-  - 文件：`manifest.json`（修改）
-  - 验证：重新加载扩展 → 检查扩展在3个域名都能激活
+- [x] 24. 支持Claude平台 (claude.ai)
+  - 需求：REQ-4.4 先支持一个平台验证架构可行性
+  - 文件：`manifest.json`（修改）, `src/platform/claude-adapter.js`（新建）
+  - 验证：**已完成** - Claude平台完整验证高亮、评论、复制功能正常
   
-  - [ ] 24.1 添加ChatGPT和Claude域名到content_scripts
-  - [ ] 24.2 添加对应的host_permissions
+  - [x] 24.1 manifest.json添加claude.ai域名权限
+  - [x] 24.2 基于用户提供的DOM结构（dom.md）
+  - [x] 24.3 创建ClaudeAdapter类，使用精确选择器`.font-claude-response`和`[data-testid="action-bar-copy"]`
+  - [x] 24.4 在Claude平台验证功能正常 - 所有功能测试通过
+  - [x] 24.5 清理调试信息，保持代码简洁
 
-- [ ] 25. 实现智能平台检测
-  - 需求：REQ-4.1 自动平台识别
-  - 文件：`src/content.js`（扩展）
-  - 验证：访问不同平台 → Console显示对应平台检测结果
+- [ ] 25. 支持ChatGPT平台 (chat.openai.com)
+  - 需求：REQ-4.4 在Claude成功基础上扩展第二个平台
+  - 文件：`manifest.json`（扩展）, `src/platform/chatgpt-adapter.js`（新建）
+  - 验证：在ChatGPT平台完整验证所有功能
   
-  - [ ] 25.1 按域名匹配适配器
-  - [ ] 25.2 失败时显示降级警告
+  - [ ] 25.1 manifest.json添加chat.openai.com域名权限
+  - [ ] 25.2 创建ChatGPTAdapter类实现平台接口
+  - [ ] 25.3 在ChatGPT平台验证完整功能流程
 
 ## 验证重点
 

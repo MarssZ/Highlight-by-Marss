@@ -138,17 +138,7 @@ class GeminiAdapter extends PlatformAdapter {
     const copyButtons = this.findCopyButtons();
     
     console.log(`GeminiAdapter loaded: detected ${window.location.hostname}`);
-    console.log(`Found ${containers.length} valid AI response containers`);
-    console.log(`Found ${copyButtons.length} copy buttons`);
-    
-    // 调试信息：显示找到的容器类型
-    // if (containers.length > 0) {
-    //   containers.forEach((container, index) => {
-    //     const classes = container.className || 'no-class';
-    //     const id = container.id || 'no-id';
-    //     console.log(`  Container ${index + 1}: classes="${classes}", id="${id}"`);
-    //   });
-    // }
+    console.log(`Found ${containers.length} AI response containers, ${copyButtons.length} copy buttons`);
     
     return {
       containers: containers.length,

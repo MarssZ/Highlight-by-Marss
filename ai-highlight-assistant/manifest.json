@@ -9,12 +9,13 @@
     "clipboardWrite"
   ],
   "host_permissions": [
-    "https://gemini.google.com/*"
+    "https://gemini.google.com/*",
+    "https://claude.ai/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://gemini.google.com/*"],
-      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
+      "matches": ["https://gemini.google.com/*", "https://claude.ai/*"],
+      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/platform/claude-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
       "css": ["styles/content.css", "styles/comment.css"],
       "run_at": "document_end"
     }
