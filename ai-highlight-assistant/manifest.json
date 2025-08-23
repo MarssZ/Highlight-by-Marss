@@ -14,7 +14,7 @@
   "content_scripts": [
     {
       "matches": ["https://gemini.google.com/*"],
-      "js": ["src/platform/platform-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
+      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
       "css": ["styles/content.css", "styles/comment.css"],
       "run_at": "document_end"
     }

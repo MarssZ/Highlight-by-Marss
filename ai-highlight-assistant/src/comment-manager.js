@@ -1,7 +1,6 @@
 // AI Highlight Assistant - Comment Manager
 // 管理评论功能的专业UI界面
 
-console.log('Comment Manager loaded');
 
 // 评论UI状态
 let currentCommentDialog = null;

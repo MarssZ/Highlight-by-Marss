@@ -1,14 +1,12 @@
 // AI Highlight Assistant - Copy Enhancer
 // 增强Gemini现有复制按钮功能
 
-console.log('Copy Enhancer loaded');
 
 // 复制按钮监听器
 let copyButtonObserver = null;
 
 // 初始化复制增强功能
 function initCopyEnhancer() {
-  console.log('Initializing copy enhancer');
   
   // 查找现有的复制按钮
   findAndSetupCopyButtons();
@@ -56,7 +54,7 @@ function findAndSetupCopyButtons() {
   
   // 设置监听器
   if (copyButtons.length > 0) {
-    console.log(`Found ${copyButtons.length} AI copy buttons, setting up listeners`);
+    // Found copy buttons, setting up listeners
     copyButtons.forEach(button => {
       setupCopyButtonListener(button);
     });

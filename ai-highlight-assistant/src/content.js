@@ -1,5 +1,4 @@
 // AI Highlight Assistant - Content Script
-console.log('AI Highlight Assistant loaded');
 
 // 存储所有高亮范围
 let highlights = new Map();
@@ -13,15 +12,12 @@ let justHighlighted = false;
 
 // 检查浏览器是否支持 CSS.highlights
 const supportsHighlights = 'highlights' in CSS;
-console.log('CSS.highlights support:', supportsHighlights);
 
 // 初始化扩展
 function initExtension() {
-  console.log('AI Highlight Assistant initialized on Gemini page');
   
   // 确认页面是 Gemini
   if (window.location.hostname === 'gemini.google.com') {
-    console.log('Gemini platform detected');
     
     // 设置文本选择监听
     setupTextSelection();
@@ -29,7 +25,6 @@ function initExtension() {
     // 初始化CSS高亮注册表
     if (supportsHighlights) {
       CSS.highlights.set('ai-highlights', new Highlight());
-      console.log('CSS.highlights initialized');
       
       // 将highlights和评论数据暴露给copy-enhancer使用
       window.highlights = highlights;

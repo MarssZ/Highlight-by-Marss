@@ -77,7 +77,7 @@ class PlatformAdapterFactory {
       throw new Error('Adapter must be instance of PlatformAdapter');
     }
     this.adapters.push(adapter);
-    console.log(`Registered adapter: ${adapter.getPlatformName()}`);
+    // Adapter registered
   }
 
   /**
