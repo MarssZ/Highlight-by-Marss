@@ -67,6 +67,8 @@
 - **精确识别**：智能检测AI回复区域，避免误操作
 - **优雅降级**：支持不同浏览器环境的回退方案
 - **性能优化**：事件去抖、智能更新，避免不必要的DOM操作
+- **🆕 模块化架构**：平台适配器模式，统一接口抽象
+- **🆕 扩展性**：为多平台支持奠定坚实基础
 
 ## 🛠️ 安装方法
 
@@ -89,9 +91,12 @@
 ai-highlight-assistant/
 ├── manifest.json           # Chrome扩展配置
 ├── src/
-│   ├── content.js          # 主要逻辑（高亮功能+范围限制）
+│   ├── content.js          # 主要逻辑（高亮功能+适配器集成）
 │   ├── copy-enhancer.js    # 复制功能增强（按钮识别+智能复制）
 │   ├── comment-manager.js  # 评论功能管理（UI+指示器+交互）
+│   ├── platform/           # 🆕 平台适配器架构
+│   │   ├── platform-adapter.js  # 适配器基础接口
+│   │   └── gemini-adapter.js     # Gemini平台适配器
 │   └── background.js       # 后台脚本
 ├── styles/
 │   ├── content.css         # 高亮样式

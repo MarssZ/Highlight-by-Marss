@@ -4,14 +4,12 @@
 
 // 复制按钮监听器
 let copyButtonObserver = null;
-let platformAdapter = null;
+// platformAdapter 由 content.js 提供，这里不重复声明
 
 // 初始化复制增强功能
 function initCopyEnhancer() {
-  // 初始化平台适配器
-  if (!initPlatformAdapter()) {
-    console.warn('⚠️ Platform adapter not available, using fallback logic');
-  }
+  // platformAdapter 应该已经由 content.js 初始化了
+  // 如果没有，说明 content.js 还没加载完成，稍后重试
   
   // 查找现有的复制按钮
   findAndSetupCopyButtons();
@@ -20,30 +18,15 @@ function initCopyEnhancer() {
   setupDynamicObserver();
 }
 
-// 初始化平台适配器
-function initPlatformAdapter() {
-  if (window.GeminiAdapter) {
-    try {
-      platformAdapter = new window.GeminiAdapter();
-      if (platformAdapter.detectPlatform()) {
-        console.log('✅ Platform adapter initialized:', platformAdapter.getPlatformName());
-        return true;
-      }
-    } catch (error) {
-      console.warn('Error initializing platform adapter:', error);
-    }
-  }
-  return false;
-}
-
 // 查找并设置复制按钮
 function findAndSetupCopyButtons() {
   let copyButtons = [];
   
-  if (platformAdapter) {
+  const adapter = window.platformAdapter;
+  if (adapter) {
     // 使用平台适配器查找复制按钮
     try {
-      copyButtons = platformAdapter.findCopyButtons().filter(button => 
+      copyButtons = adapter.findCopyButtons().filter(button => 
         !button.hasAttribute('data-ai-highlight-enhanced')
       );
       // Platform adapter found copy buttons
@@ -199,16 +182,17 @@ function handleCopyButtonClick(button, event) {
     }
     
   } catch (error) {
-    console.log('Error handling copy button click:', error);
+    console.error('Error handling copy button click:', error);
   }
 }
 
 // 查找消息容器
 function findMessageContainer(button) {
-  if (platformAdapter) {
+  const adapter = window.platformAdapter;
+  if (adapter) {
     // 使用平台适配器查找消息容器
     try {
-      const container = platformAdapter.getCopyButtonContainer(button);
+      const container = adapter.getCopyButtonContainer(button);
       if (container) {
         // Platform adapter found message container
         return container;

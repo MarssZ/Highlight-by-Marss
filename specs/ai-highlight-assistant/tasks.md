@@ -156,13 +156,13 @@
   - [ ] 22.1 定义5个核心方法接口
   - [ ] 22.2 创建适配器工厂和注册机制
 
-- [ ] 23. 重构content.js使用适配器系统
+- [x] 23. 重构content.js使用适配器系统
   - 需求：REQ-4.3 解除平台硬编码依赖
   - 文件：`src/content.js`（重构）
-  - 验证：Console显示 "Using platform adapter: GeminiAdapter" + 功能完全正常
+  - 验证：**已完成** - 统一适配器架构，移除硬编码依赖，功能完全正常
   
-  - [ ] 23.1 替换isAIResponseContainer为adapter调用
-  - [ ] 23.2 添加适配器初始化逻辑
+  - [x] 23.1 替换isAIResponseContainer为adapter调用
+  - [x] 23.2 添加适配器初始化逻辑
 
 ## 5C. 扩展配置（状态验证）
 

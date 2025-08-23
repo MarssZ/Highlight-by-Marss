@@ -18,48 +18,59 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，允许用户在AI聊天�
 - ✅ 评论与高亮文本关联存储，🔖指示器显示
 - ✅ 复制时包含评论信息：`<highlight comment="评论">文本</highlight>`
 
-### 阶段2：多平台架构重构 🔄 规划中
+### 阶段2：多平台架构重构 ✅ 已完成
 **保持功能不变，重构为平台无关架构**
 
-**重构目标：**
-- 🎯 提取平台特定逻辑到适配器层
-- 🎯 核心高亮/评论逻辑保持不变
-- 🎯 支持ChatGPT、Claude等主流平台
-- 🎯 零破坏性：Gemini用户体验完全不变
+**重构成果：**
+- ✅ 提取平台特定逻辑到适配器层
+- ✅ 核心高亮/评论逻辑保持不变
+- ✅ 统一适配器接口，为多平台支持奠定基础
+- ✅ 零破坏性：Gemini用户体验完全不变
 
-## 架构设计（MVP实现）
+## 架构设计（重构后实现）
 
 ```mermaid
 graph TD
-    A[Gemini网页] --> B[Content Script]
-    A --> C[Copy Enhancer]
-    A --> D[Comment Manager]
-    B --> E[CSS.highlights API]
-    B --> F[高亮范围检查]
-    C --> G[复制按钮劫持]
-    C --> H[智能内容生成]
-    C --> I[Clipboard API]
-    D --> J[评论输入框]
-    D --> K[评论存储]
-    D --> L[评论指示器]
-    D --> M[悬停工具提示]
+    A[AI平台网页] --> B[Platform Adapter]
+    B --> |Gemini| BA[GeminiAdapter]
+    B --> |Future| BB[ChatGPTAdapter]
+    B --> |Future| BC[ClaudeAdapter]
+    
+    BA --> C[Content Script]
+    BA --> D[Copy Enhancer]
+    C --> E[CSS.highlights API]
+    C --> F[高亮范围检查]
+    D --> G[复制按钮识别]
+    D --> H[智能内容生成]
+    D --> I[Clipboard API]
+    
+    C --> J[Comment Manager]
+    J --> K[评论输入框]
+    J --> L[评论存储]
+    J --> M[评论指示器]
+    J --> N[悬停工具提示]
 ```
 
 ## 核心组件
 
-### 1. Content Script (`content.js`) ✅ 已实现，需扩展
-负责高亮功能的核心逻辑
+### 1. Content Script (`content.js`) ✅ 已完成重构
+负责高亮功能的核心逻辑，已集成平台适配器
 
 **职责：**
+- 🆕 初始化平台适配器，统一接口抽象
 - 监听AI回复区域内的文本选择
 - 使用CSS.highlights API应用高亮（支持跨元素）
 - 智能降级到传统DOM高亮
 - Ctrl+点击移除高亮，Ctrl+Z撤销
-- 限制高亮范围在AI回复容器内
+- 🆕 通过适配器验证AI回复容器
 - 🆕 与Comment Manager协作处理点击事件
 
 **关键方法：**
 ```javascript
+// 🆕 适配器初始化
+initPlatformAdapter()
+// 🆕 使用适配器验证容器
+isAIResponseContainer(element)
 // 检查选择范围
 isSelectionInAIResponse(selection)
 // CSS高亮
@@ -72,12 +83,14 @@ removeHighlightAtPoint(clickPoint)
 handleHighlightClick(event)
 ```
 
-### 2. Copy Enhancer (`copy-enhancer.js`) ✅ 已实现，需扩展
-负责劫持和增强原生复制功能
+### 2. Copy Enhancer (`copy-enhancer.js`) ✅ 已完成重构
+负责劫持和增强原生复制功能，已集成平台适配器
 
 **职责：**
-- 精确识别AI回复的复制按钮（`data-test-id="copy-button"`）
+- 🆕 初始化平台适配器，统一接口抽象
+- 🆕 通过适配器精确识别AI回复的复制按钮
 - 监听复制按钮点击事件
+- 🆕 通过适配器查找消息容器
 - 检测消息容器中的高亮内容
 - 🆕 获取高亮关联的评论数据
 - 生成带`<highlight comment="">`标签的增强文本
@@ -85,10 +98,14 @@ handleHighlightClick(event)
 
 **关键方法：**
 ```javascript
-// 识别复制按钮
+// 🆕 适配器初始化
+initPlatformAdapter()
+// 🆕 使用适配器识别复制按钮
 findAndSetupCopyButtons()
 // 处理复制点击
 handleCopyButtonClick(button, event)
+// 🆕 使用适配器查找消息容器
+findMessageContainer(button)
 // 🆕 生成包含评论的增强内容
 generateHighlightedTextWithComments(container)
 // 剪贴板操作
@@ -301,20 +318,22 @@ graph TD
 ```
 
 ### 重构策略
-**阶段2.1：提取适配器接口**
-- 创建`PlatformAdapter`基类和`GeminiAdapter`实现
-- 现有功能完全不变，只是包装一层
+**阶段2.1：提取适配器接口** ✅ 已完成
+- ✅ 创建`PlatformAdapter`基类和`GeminiAdapter`实现
+- ✅ 现有功能完全不变，只是包装一层
 
-**阶段2.2：重构核心逻辑**
-- `content.js`调用适配器接口而非硬编码逻辑
-- 保持所有现有API和行为不变
+**阶段2.2：重构核心逻辑** ✅ 已完成
+- ✅ `content.js`调用适配器接口而非硬编码逻辑
+- ✅ `copy-enhancer.js`使用适配器识别复制按钮
+- ✅ 保持所有现有API和行为不变
 
-**阶段2.3：验证Gemini功能**
-- 确保重构后Gemini平台100%功能正常
-- 性能和用户体验无任何退化
+**阶段2.3：验证Gemini功能** ✅ 已完成
+- ✅ 确保重构后Gemini平台100%功能正常
+- ✅ 性能和用户体验无任何退化
+- ✅ 统一架构，消除硬编码依赖
 
-**阶段2.4：添加新平台**
-- 实现`ChatGPTAdapter`和`ClaudeAdapter`
+**阶段2.4：添加新平台** 🎯 准备就绪
+- 架构已就绪，实现`ChatGPTAdapter`和`ClaudeAdapter`
 - 每个适配器只需30-50行代码
 
 ### MVP限制（保持不变）

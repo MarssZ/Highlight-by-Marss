@@ -10,14 +10,25 @@ let highlightComments = new Map();
 // 🆕 防止误触评论的状态标记
 let justHighlighted = false;
 
+// 平台适配器实例（全局共享给其他content scripts使用）
+let platformAdapter = null;
+window.platformAdapter = null; // 暴露给其他脚本
+
 // 检查浏览器是否支持 CSS.highlights
 const supportsHighlights = 'highlights' in CSS;
 
 // 初始化扩展
 function initExtension() {
+  // 初始化平台适配器
+  if (!initPlatformAdapter()) {
+    console.warn('⚠️ Platform adapter not available, extension may not work properly');
+  }
   
-  // 确认页面是 Gemini
-  if (window.location.hostname === 'gemini.google.com') {
+  // 确认页面是支持的平台（双重检查：适配器优先，域名检查备用）
+  const isGeminiDomain = window.location.hostname === 'gemini.google.com';
+  const hasValidAdapter = platformAdapter && platformAdapter.detectPlatform();
+  
+  if (hasValidAdapter || isGeminiDomain) {
     
     // 设置文本选择监听
     setupTextSelection();
@@ -32,17 +43,13 @@ function initExtension() {
     }
     
     // 初始化复制增强功能
-    console.log('Checking window.copyEnhancer:', !!window.copyEnhancer);
     if (window.copyEnhancer) {
-      console.log('copyEnhancer found, calling init in 1 second');
       setTimeout(() => {
         window.copyEnhancer.init();
       }, 1000); // 延迟1秒确保页面加载完成
     } else {
-      console.log('copyEnhancer not found, will retry');
       // 如果没找到，继续重试
       setTimeout(() => {
-        console.log('Retry: checking window.copyEnhancer:', !!window.copyEnhancer);
         if (window.copyEnhancer) {
           window.copyEnhancer.init();
         }
@@ -53,15 +60,16 @@ function initExtension() {
     setTimeout(() => {
       if (window.commentManager && window.commentManager.init) {
         window.commentManager.init();
-        console.log('Comment indicators initialized');
       }
     }, 2000);
+  } else {
+    console.warn('⚠️ No supported platform detected - not on Gemini domain and adapter failed');
   }
 }
 
 // 监听文本选择事件
 function setupTextSelection() {
-  console.log('Setting up text selection listener');
+  // Setting up text selection listener
   
   document.addEventListener('mouseup', handleTextSelection);
   document.addEventListener('keyup', handleTextSelection); // 处理键盘选择
@@ -79,11 +87,11 @@ function handleTextSelection(event) {
     
     // 检查选择是否在AI回复区域内
     if (!isSelectionInAIResponse(selection)) {
-      console.log('Selection outside AI response area, ignoring');
+      // Selection outside AI response area, ignoring
       return;
     }
     
-    console.log('Text selected in AI response:', selectedText);
+    // Text selected in AI response
     
     // 立即应用高亮效果
     if (supportsHighlights) {
@@ -115,13 +123,44 @@ function isSelectionInAIResponse(selection) {
     
     return false;
   } catch (error) {
-    console.log('Error checking selection area:', error);
+    console.warn('Error checking selection area:', error);
     return false;
   }
 }
 
-// 判断元素是否是AI回复容器
+// 初始化平台适配器
+function initPlatformAdapter() {
+  if (window.GeminiAdapter) {
+    try {
+      platformAdapter = new window.GeminiAdapter();
+      window.platformAdapter = platformAdapter; // 同步到全局
+      if (platformAdapter.detectPlatform()) {
+        console.log('✅ Platform adapter initialized:', platformAdapter.getPlatformName());
+        return true;
+      }
+    } catch (error) {
+      console.warn('Error initializing platform adapter:', error);
+    }
+  }
+  return false;
+}
+
+// 判断元素是否是AI回复容器（使用适配器）
 function isAIResponseContainer(element) {
+  if (platformAdapter) {
+    try {
+      return platformAdapter.isValidResponseContainer(element);
+    } catch (error) {
+      console.warn('Error using platform adapter for container validation:', error);
+    }
+  }
+  
+  // 降级到原有逻辑
+  return isAIResponseContainerFallback(element);
+}
+
+// 降级方案：原有的AI回复容器判断逻辑
+function isAIResponseContainerFallback(element) {
   if (!element || !element.classList) {
     return false;
   }
@@ -169,7 +208,7 @@ function applyHighlightCSS(selection) {
     const highlight = CSS.highlights.get('ai-highlights');
     highlight.add(range);
     
-    console.log('CSS Highlight applied:', highlightId);
+    // CSS Highlight applied
     
     // 🆕 标记刚刚完成高亮，防止误触评论
     justHighlighted = true;
@@ -181,7 +220,7 @@ function applyHighlightCSS(selection) {
     selection.removeAllRanges();
     
   } catch (error) {
-    console.log('Could not apply CSS highlight:', error.message);
+    console.warn('Could not apply CSS highlight:', error.message);
   }
 }
 
@@ -193,7 +232,7 @@ function applyHighlightFallback(selection) {
     // 只处理简单的文本选择，跳过复杂情况
     if (range.startContainer.nodeType !== 3 || range.endContainer.nodeType !== 3 || 
         range.startContainer !== range.endContainer) {
-      console.log('Skipping complex selection for fallback method');
+      // Skipping complex selection for fallback method
       selection.removeAllRanges();
       return;
     }
@@ -212,13 +251,13 @@ function applyHighlightFallback(selection) {
     // 包装选中的内容
     range.surroundContents(highlightSpan);
     
-    console.log('Fallback highlight applied');
+    // Fallback highlight applied
     
     // 清除选择
     selection.removeAllRanges();
     
   } catch (error) {
-    console.log('Could not apply fallback highlight:', error.message);
+    console.warn('Could not apply fallback highlight:', error.message);
   }
 }
 
@@ -239,7 +278,7 @@ function handleHighlightClick(event) {
       } else {
         // 🆕 防止误触：刚完成高亮时不触发评论
         if (justHighlighted) {
-          console.log('刚完成高亮，跳过评论触发');
+          // 刚完成高亮，跳过评论触发
           return;
         }
         
@@ -280,7 +319,7 @@ function removeHighlightById(highlightId) {
       window.commentManager.removeIndicator(highlightId);
     }
     
-    console.log('CSS Highlight, comment and indicator removed:', highlightId);
+    // CSS Highlight, comment and indicator removed
     return true;
   }
   return false;
@@ -300,7 +339,7 @@ function showCommentInput(highlightId, clickPosition = null) {
     window.commentManager.showCommentInput(highlightId, clickPosition || { x: 0, y: 0 });
   } else {
     // 降级到prompt方案
-    console.log('Comment manager not available, using fallback prompt');
+    // Comment manager not available, using fallback prompt
     showCommentInputFallback(highlightId);
   }
 }
@@ -314,7 +353,7 @@ function showCommentInputFallback(highlightId) {
   const newComment = prompt(`为高亮文本添加评论：\n"${commentData.text}"`, currentComment);
   
   if (newComment === null) {
-    console.log('Comment input cancelled');
+    // Comment input cancelled
     return;
   }
   
@@ -323,12 +362,7 @@ function showCommentInputFallback(highlightId) {
   commentData.hasComment = newComment.trim().length > 0;
   commentData.timestamp = Date.now();
   
-  console.log('评论已保存 (fallback):', {
-    highlightId: highlightId,
-    text: commentData.text,
-    comment: commentData.comment,
-    hasComment: commentData.hasComment
-  });
+  // 评论已保存 (fallback)
 }
 
 // 移除CSS高亮（通过点击坐标）- 保留为兼容性
@@ -354,7 +388,7 @@ function isPointInRange(clickPoint, range) {
     }
     return false;
   } catch (error) {
-    console.log('Error checking point in range:', error);
+    console.warn('Error checking point in range:', error);
     return false;
   }
 }
@@ -368,7 +402,7 @@ function removeHighlightFallback(highlightElement) {
   const textNode = document.createTextNode(textContent);
   parent.replaceChild(textNode, highlightElement);
   
-  console.log('Fallback highlight removed');
+  // Fallback highlight removed
 }
 
 // 快捷键支持 - Ctrl+Z 撤销最后一个高亮
@@ -379,7 +413,7 @@ document.addEventListener('keydown', function(e) {
       const lastId = Math.max(...highlights.keys());
       removeHighlightById(lastId);
       
-      console.log('CSS Highlight and comment removed by Ctrl+Z:', lastId);
+      console.log('✅ Highlight and comment removed by Ctrl+Z');
       e.preventDefault();
     } else {
       // 回退方法
