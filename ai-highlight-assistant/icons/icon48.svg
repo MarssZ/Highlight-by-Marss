@@ -1,0 +1,7 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 中国红背景，圆角正方形 -->
+  <rect x="3" y="3" width="42" height="42" rx="8" ry="8" fill="#DC143C"/>
+  
+  <!-- 白色M字 -->
+  <text x="24" y="32" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">M</text>
+</svg>
