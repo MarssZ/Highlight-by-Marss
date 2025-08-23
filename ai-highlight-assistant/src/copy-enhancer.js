@@ -1,12 +1,17 @@
 // AI Highlight Assistant - Copy Enhancer
-// 增强Gemini现有复制按钮功能
+// 增强现有复制按钮功能，使用平台适配器
 
 
 // 复制按钮监听器
 let copyButtonObserver = null;
+let platformAdapter = null;
 
 // 初始化复制增强功能
 function initCopyEnhancer() {
+  // 初始化平台适配器
+  if (!initPlatformAdapter()) {
+    console.warn('⚠️ Platform adapter not available, using fallback logic');
+  }
   
   // 查找现有的复制按钮
   findAndSetupCopyButtons();
@@ -15,8 +20,56 @@ function initCopyEnhancer() {
   setupDynamicObserver();
 }
 
+// 初始化平台适配器
+function initPlatformAdapter() {
+  if (window.GeminiAdapter) {
+    try {
+      platformAdapter = new window.GeminiAdapter();
+      if (platformAdapter.detectPlatform()) {
+        console.log('✅ Platform adapter initialized:', platformAdapter.getPlatformName());
+        return true;
+      }
+    } catch (error) {
+      console.warn('Error initializing platform adapter:', error);
+    }
+  }
+  return false;
+}
+
 // 查找并设置复制按钮
 function findAndSetupCopyButtons() {
+  let copyButtons = [];
+  
+  if (platformAdapter) {
+    // 使用平台适配器查找复制按钮
+    try {
+      copyButtons = platformAdapter.findCopyButtons().filter(button => 
+        !button.hasAttribute('data-ai-highlight-enhanced')
+      );
+      // Platform adapter found copy buttons
+    } catch (error) {
+      console.warn('Error using platform adapter for copy buttons:', error);
+      copyButtons = findCopyButtonsFallback();
+    }
+  } else {
+    // 降级到原有逻辑
+    copyButtons = findCopyButtonsFallback();
+  }
+  
+  // 设置监听器
+  if (copyButtons.length > 0) {
+    copyButtons.forEach(button => {
+      setupCopyButtonListener(button);
+    });
+  }
+  
+  return copyButtons;
+}
+
+// 降级方案：原有的复制按钮查找逻辑
+function findCopyButtonsFallback() {
+  // Using fallback copy button detection
+  
   // 精确选择器
   const selectors = [
     'button[data-test-id="copy-button"]',
@@ -51,14 +104,6 @@ function findAndSetupCopyButtons() {
     const isInButtonsContainer = button.closest('.buttons-container-v2');
     return isAICopyButton && isInButtonsContainer;
   });
-  
-  // 设置监听器
-  if (copyButtons.length > 0) {
-    // Found copy buttons, setting up listeners
-    copyButtons.forEach(button => {
-      setupCopyButtonListener(button);
-    });
-  }
   
   return copyButtons;
 }
@@ -111,7 +156,7 @@ function setupCopyButtonListener(button) {
   
   // 监听点击事件
   button.addEventListener('click', function(event) {
-    console.log('🔥 Copy button clicked');
+    // Copy button clicked
     
     // 延迟处理，让原始复制操作先完成
     setTimeout(() => {
@@ -127,7 +172,7 @@ function handleCopyButtonClick(button, event) {
     const messageContainer = findMessageContainer(button);
     
     if (!messageContainer) {
-      console.log('No message container found');
+      // No message container found
       return;
     }
     
@@ -135,22 +180,22 @@ function handleCopyButtonClick(button, event) {
     const hasHighlights = checkForHighlights(messageContainer);
     
     if (hasHighlights) {
-      console.log('✨ Message contains highlights, generating enhanced copy content');
+      // Message contains highlights, generating enhanced copy content
       
       // 🆕 生成带高亮和评论标签的内容
       const enhancedContent = generateHighlightedText(messageContainer);
       
       if (enhancedContent) {
-        console.log('📝 Generated enhanced content:', enhancedContent);
+        // Generated enhanced content
         
         // 覆写剪贴板内容
         copyToClipboard(enhancedContent);
-        console.log('📋 Enhanced content copied to clipboard');
+        console.log('✅ Enhanced content copied with highlights and comments');
       } else {
-        console.log('❌ Failed to generate enhanced content');
+        console.warn('⚠️ Failed to generate enhanced content');
       }
     } else {
-      console.log('📄 Message has no highlights, using default copy');
+      // Message has no highlights, using default copy
     }
     
   } catch (error) {
@@ -160,6 +205,27 @@ function handleCopyButtonClick(button, event) {
 
 // 查找消息容器
 function findMessageContainer(button) {
+  if (platformAdapter) {
+    // 使用平台适配器查找消息容器
+    try {
+      const container = platformAdapter.getCopyButtonContainer(button);
+      if (container) {
+        // Platform adapter found message container
+        return container;
+      }
+    } catch (error) {
+      console.warn('Error using platform adapter for message container:', error);
+    }
+  }
+  
+  // 降级到原有逻辑
+  return findMessageContainerFallback(button);
+}
+
+// 降级方案：原有的消息容器查找逻辑
+function findMessageContainerFallback(button) {
+  // Using fallback message container detection
+  
   // 尝试不同的容器选择器
   const containerSelectors = [
     '[data-message-author-role]',
@@ -244,7 +310,7 @@ function setupDynamicObserver() {
     subtree: true
   });
   
-  console.log('Dynamic observer setup complete');
+  // Dynamic observer setup complete
 }
 
 // 获取元素所有属性的辅助函数
@@ -278,8 +344,7 @@ function generateHighlightedText(container) {
     
     // 🆕 处理CSS.highlights高亮，包含评论信息
     if (window.highlights && window.highlights.size > 0) {
-      console.log('Processing highlights with comments:', window.highlights.size);
-      console.log('Comment data available:', !!window.highlightComments, window.highlightComments?.size || 0);
+      // Processing highlights with comments
       
       // 按文本长度排序，避免短文本替换影响长文本
       const sortedHighlights = Array.from(window.highlights.entries())
@@ -298,11 +363,11 @@ function generateHighlightedText(container) {
             // 有评论：生成带comment属性的标签
             const escapedComment = escapeXMLAttribute(commentData.comment.trim());
             replacementTag = `<highlight comment="${escapedComment}">${highlightText}</highlight>`;
-            console.log(`✨ Generated highlight with comment: "${commentData.comment.trim()}"`);
+            // Generated highlight with comment
           } else {
             // 无评论：生成普通标签
             replacementTag = `<highlight>${highlightText}</highlight>`;
-            console.log('📝 Generated highlight without comment');
+            // Generated highlight without comment
           }
           
           // 替换文本（只替换第一个匹配项，避免重复）
@@ -314,7 +379,7 @@ function generateHighlightedText(container) {
       }
     }
     
-    console.log('📋 Final enhanced content:', textContent);
+    // Final enhanced content generated
     return textContent;
     
   } catch (error) {
@@ -353,9 +418,9 @@ function copyToClipboard(text) {
     // 优先使用 navigator.clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
-        console.log('✅ Text copied using navigator.clipboard');
+        // Text copied using navigator.clipboard
       }).catch(error => {
-        console.log('❌ Navigator.clipboard failed, trying fallback');
+        console.warn('⚠️ Navigator.clipboard failed, trying fallback');
         fallbackCopyToClipboard(text);
       });
     } else {
@@ -379,9 +444,9 @@ function fallbackCopyToClipboard(text) {
     textarea.select();
     document.execCommand('copy');
     document.body.removeChild(textarea);
-    console.log('✅ Text copied using fallback method');
+    // Text copied using fallback method
   } catch (error) {
-    console.log('❌ All copy methods failed:', error);
+    console.error('❌ All copy methods failed:', error);
   }
 }
 
