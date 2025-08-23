@@ -6,13 +6,22 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，旨在增强用户与AI�
 
 核心价值：减少重复引用的手动输入，让对话更聚焦于用户关注的特定内容。
 
-**MVP范围：** 首先在Gemini平台(gemini.google.com)实现核心功能，验证可行性后再扩展到其他平台。
+## 架构演进
 
-**未来功能（非MVP）：**
-- 高亮内容管理界面
-- 键盘快捷键支持
-- 多平台兼容性
-- 高亮样式自定义
+**阶段1 - MVP已完成：** 在Gemini平台(gemini.google.com)完成核心功能，验证可行性 ✅
+**阶段2 - 多平台扩展：** 重构为平台适配器架构，支持ChatGPT、Claude、Grok等主流平台 🔄
+
+## 支持平台规划
+
+**优先级1（立即支持）：**
+- ✅ Gemini (gemini.google.com) - 已完成
+- 🎯 ChatGPT (chat.openai.com) - 目标平台
+- 🎯 Claude (claude.ai) - 目标平台
+
+**优先级2（后续扩展）：**
+- Grok (grok.x.ai)
+- Perplexity (perplexity.ai)
+- 其他AI平台
 
 ## 需求
 
@@ -48,11 +57,33 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，旨在增强用户与AI�
 5. WHEN 用户复制高亮内容 THEN 系统 SHALL 包含评论信息，格式为：`<highlight comment="用户评论">高亮文本</highlight>`
 6. WHEN 页面刷新 THEN 系统 SHALL 保持高亮文本及其关联的评论
 
-### 需求4：Gemini平台兼容性（MVP）
-**用户故事：** 作为Gemini用户，我希望插件能在Gemini平台正常工作
+### 需求4：平台适配器架构
+**用户故事：** 作为开发者，我希望能够轻松扩展到新的AI平台，而不需要修改核心高亮逻辑
 
 #### 验收标准
-1. WHEN 用户访问gemini.google.com THEN 系统 SHALL 自动激活高亮和评论功能
-2. WHEN Gemini界面加载完成 THEN 系统 SHALL 正确识别AI回复区域以便进行高亮和评论
-3. WHEN 高亮功能激活 THEN 系统 SHALL 支持右键菜单、复制功能和评论功能
+1. WHEN 系统检测到支持的AI平台 THEN 系统 SHALL 自动加载对应的平台适配器
+2. WHEN 平台适配器加载完成 THEN 系统 SHALL 正确识别该平台的AI回复区域和复制按钮
+3. WHEN 添加新平台支持 THEN 开发者 SHALL 只需实现平台适配器接口，无需修改核心逻辑
+4. WHEN 平台适配器初始化失败 THEN 系统 SHALL 降级到通用检测逻辑并记录警告
+
+#### 平台适配器接口规范
+每个平台适配器必须实现以下方法：
+```javascript
+interface PlatformAdapter {
+  detectPlatform(): boolean;           // 检测是否为目标平台
+  findResponseContainers(): Element[]; // 查找AI回复容器
+  findCopyButtons(): Element[];        // 查找复制按钮
+  isValidResponseContainer(element: Element): boolean; // 验证容器有效性
+  getCopyButtonContainer(button: Element): Element;    // 获取复制按钮对应的消息容器
+}
+```
+
+### 需求5：多平台兼容性
+**用户故事：** 作为用户，我希望在不同AI平台都能使用相同的高亮和评论功能
+
+#### 验收标准
+1. WHEN 用户访问支持的AI平台 THEN 系统 SHALL 自动激活高亮和评论功能
+2. WHEN 用户在不同平台间切换 THEN 功能体验 SHALL 保持一致
+3. WHEN 平台DOM结构发生变化 THEN 系统 SHALL 通过适配器隔离影响，核心功能不受影响
+4. WHEN 新增平台支持 THEN 用户 SHALL 无需重新配置或学习新操作
 

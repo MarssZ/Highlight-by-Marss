@@ -119,6 +119,115 @@
 
 **🎉 阶段4C交互完善全部完成！** 评论功能从核心到细节都已达到产品级水准
 
+---
+
+# 阶段5：多平台架构重构 🚀
+
+## 设计原则
+- **Never break userspace** - Gemini用户体验完全不变
+- **渐进式重构** - 每步可验证，可回滚  
+- **Console输出验证** - 架构任务通过具体Console输出验证
+
+## 5A. 平台适配器基础架构
+
+- [ ] 20. 创建平台适配器基础接口
+  - 需求：REQ-4.1 建立平台抽象层
+  - 文件：`src/platform/platform-adapter.js`（新建）
+  - 验证：F12控制台显示 "Platform adapter interface loaded"
+  
+  - [ ] 20.1 定义适配器接口规范
+    - 5个核心方法：detectPlatform, findResponseContainers, findCopyButtons, isValidResponseContainer, getCopyButtonContainer
+  - [ ] 20.2 添加适配器工厂模式
+    - 动态检测和加载对应平台适配器
+
+- [ ] 21. 实现Gemini平台适配器
+  - 需求：REQ-4.2 封装现有Gemini逻辑
+  - 文件：`src/platform/gemini-adapter.js`（新建）
+  - 验证：控制台输出 "GeminiAdapter loaded: detected hostname gemini.google.com"
+  
+  - [ ] 21.1 提取现有DOM选择器逻辑
+    - 将content.js中的isAIResponseContainer逻辑迁移
+  - [ ] 21.2 提取复制按钮识别逻辑  
+    - 将copy-enhancer.js中的按钮查找逻辑迁移
+  - [ ] 21.3 验证适配器方法返回正确结果
+    - 控制台输出找到的容器和按钮数量
+
+- [ ] 22. 重构核心逻辑使用适配器
+  - 需求：REQ-4.3 解除平台硬编码依赖
+  - 文件：`src/content.js`（重构），`src/copy-enhancer.js`（重构）
+  - 验证：功能完全正常 + 控制台显示 "Using platform adapter: GeminiAdapter"
+  
+  - [ ] 22.1 修改content.js调用适配器接口
+    - 替换isAIResponseContainer为adapter.isValidResponseContainer
+  - [ ] 22.2 修改copy-enhancer.js调用适配器接口
+    - 替换hardcode选择器为adapter方法调用
+  - [ ] 22.3 确保所有现有功能完全正常
+    - Gemini平台所有高亮、评论、复制功能不受影响
+
+## 5B. 新平台支持
+
+- [ ] 23. 实现ChatGPT平台适配器
+  - 需求：REQ-5.1 支持ChatGPT平台
+  - 文件：`src/platform/chatgpt-adapter.js`（新建）
+  - 验证：在chat.openai.com控制台显示 "ChatGPTAdapter loaded: found X response containers, Y copy buttons"
+  
+  - [ ] 23.1 实现ChatGPT DOM选择器
+    - 查找[data-message-author-role="assistant"]容器
+  - [ ] 23.2 实现ChatGPT复制按钮识别
+    - 识别复制按钮特征和位置关系
+  - [ ] 23.3 测试基础高亮功能
+    - 在ChatGPT页面选中AI回复文本能正常高亮
+
+- [ ] 24. 实现Claude平台适配器  
+  - 需求：REQ-5.1 支持Claude平台
+  - 文件：`src/platform/claude-adapter.js`（新建）
+  - 验证：在claude.ai控制台显示 "ClaudeAdapter loaded: found X response containers, Y copy buttons"
+  
+  - [ ] 24.1 实现Claude DOM选择器
+    - 根据Claude页面结构识别AI回复区域
+  - [ ] 24.2 实现Claude复制按钮识别
+    - 识别Claude特有的复制按钮样式
+  - [ ] 24.3 测试基础高亮功能
+    - 在Claude页面选中AI回复文本能正常高亮
+
+## 5C. 平台检测与配置
+
+- [ ] 25. 更新Chrome扩展配置支持多域名
+  - 需求：REQ-4.4 扩展权限配置
+  - 文件：`manifest.json`（修改）
+  - 验证：扩展能在gemini.google.com, chat.openai.com, claude.ai三个域名自动激活
+  
+  - [ ] 25.1 添加多域名匹配规则
+    - content_scripts添加ChatGPT和Claude域名
+  - [ ] 25.2 确保权限最小化原则
+    - 只请求必要的域名权限
+
+- [ ] 26. 实现智能平台检测和初始化
+  - 需求：REQ-4.1 自动平台识别
+  - 文件：`src/content.js`（扩展）
+  - 验证：控制台显示 "Platform detected: [platform-name], initializing [AdapterName]"
+  
+  - [ ] 26.1 平台检测优先级逻辑
+    - 按域名准确匹配对应适配器
+  - [ ] 26.2 适配器加载失败降级处理
+    - 控制台警告 + 尝试通用检测逻辑
+  - [ ] 26.3 初始化完整性验证
+    - 确保适配器方法都正常工作
+
+## 验证重点
+
+### Gemini平台验证（零破坏性）
+- ✅ 所有现有功能完全正常
+- ✅ 性能无退化  
+- ✅ 用户体验无变化
+- ✅ Console显示适配器信息
+
+### 新平台验证
+- ✅ 基础高亮功能正常
+- ✅ 复制按钮正确识别
+- ✅ AI回复区域准确限制
+- ✅ Console输出检测结果
+
 ## 后续增强功能（可选）
 
 ### 数据持久化功能（评论功能稳定后再考虑）
