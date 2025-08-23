@@ -236,7 +236,7 @@ function handleHighlightClick(event) {
     const highlightId = findHighlightAtPoint(clickPoint);
     
     if (highlightId) {
-      if (event.ctrlKey) {
+      if (event.ctrlKey || event.metaKey) {
         // Ctrl+点击：移除高亮
         removeHighlightById(highlightId);
         event.preventDefault();
@@ -378,7 +378,7 @@ function removeHighlightFallback(highlightElement) {
 
 // 快捷键支持 - Ctrl+Z 撤销最后一个高亮
 document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && e.key === 'z') {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     if (supportsHighlights && highlights.size > 0) {
       // 移除最后一个CSS高亮和评论
       const lastId = Math.max(...highlights.keys());
