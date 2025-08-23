@@ -123,96 +123,64 @@
 
 # 阶段5：多平台架构重构 🚀
 
-## 设计原则
-- **Never break userspace** - Gemini用户体验完全不变
-- **渐进式重构** - 每步可验证，可回滚  
-- **Console输出验证** - 架构任务通过具体Console输出验证
+**设计原则：按验证容易程度排序，避免错误传染**
 
-## 5A. 平台适配器基础架构
+## 5A. 立即可验证功能（1-5秒验证）
 
-- [ ] 20. 创建平台适配器基础接口
+- [ ] 20. 创建Gemini适配器并测试基础功能
+  - 需求：REQ-4.2 封装Gemini逻辑但保持功能不变
+  - 文件：`src/platform/gemini-adapter.js`（新建）
+  - 验证：在Gemini页面选中AI回复文本 → 1秒内变黄色高亮（功能完全正常）
+  
+  - [ ] 20.1 创建GeminiAdapter类
+    - 提取isAIResponseContainer和copy button查找逻辑
+  - [ ] 20.2 测试适配器DOM方法正确性
+    - Console显示找到的容器数量和复制按钮数量
+
+- [ ] 21. 验证复制功能使用适配器
+  - 需求：REQ-4.3 重构copy-enhancer使用适配器
+  - 文件：`src/copy-enhancer.js`（重构）
+  - 验证：高亮AI回复 → 点击复制 → 5秒内粘贴检查带highlight标签内容
+  
+  - [ ] 21.1 重构复制按钮识别逻辑使用适配器
+  - [ ] 21.2 确保评论复制功能正常
+    - 测试完整工作流：高亮→评论→复制→粘贴验证
+
+## 5B. Console验证功能（技术架构）
+
+- [ ] 22. 创建平台适配器基础接口
   - 需求：REQ-4.1 建立平台抽象层
-  - 文件：`src/platform/platform-adapter.js`（新建）
+  - 文件：`src/platform/platform-adapter.js`（基础接口）
   - 验证：F12控制台显示 "Platform adapter interface loaded"
   
-  - [ ] 20.1 定义适配器接口规范
-    - 5个核心方法：detectPlatform, findResponseContainers, findCopyButtons, isValidResponseContainer, getCopyButtonContainer
-  - [ ] 20.2 添加适配器工厂模式
-    - 动态检测和加载对应平台适配器
+  - [ ] 22.1 定义5个核心方法接口
+  - [ ] 22.2 创建适配器工厂和注册机制
 
-- [ ] 21. 实现Gemini平台适配器
-  - 需求：REQ-4.2 封装现有Gemini逻辑
-  - 文件：`src/platform/gemini-adapter.js`（新建）
-  - 验证：控制台输出 "GeminiAdapter loaded: detected hostname gemini.google.com"
-  
-  - [ ] 21.1 提取现有DOM选择器逻辑
-    - 将content.js中的isAIResponseContainer逻辑迁移
-  - [ ] 21.2 提取复制按钮识别逻辑  
-    - 将copy-enhancer.js中的按钮查找逻辑迁移
-  - [ ] 21.3 验证适配器方法返回正确结果
-    - 控制台输出找到的容器和按钮数量
-
-- [ ] 22. 重构核心逻辑使用适配器
+- [ ] 23. 重构content.js使用适配器系统
   - 需求：REQ-4.3 解除平台硬编码依赖
-  - 文件：`src/content.js`（重构），`src/copy-enhancer.js`（重构）
-  - 验证：功能完全正常 + 控制台显示 "Using platform adapter: GeminiAdapter"
+  - 文件：`src/content.js`（重构）
+  - 验证：Console显示 "Using platform adapter: GeminiAdapter" + 功能完全正常
   
-  - [ ] 22.1 修改content.js调用适配器接口
-    - 替换isAIResponseContainer为adapter.isValidResponseContainer
-  - [ ] 22.2 修改copy-enhancer.js调用适配器接口
-    - 替换hardcode选择器为adapter方法调用
-  - [ ] 22.3 确保所有现有功能完全正常
-    - Gemini平台所有高亮、评论、复制功能不受影响
+  - [ ] 23.1 替换isAIResponseContainer为adapter调用
+  - [ ] 23.2 添加适配器初始化逻辑
 
-## 5B. 新平台支持
+## 5C. 扩展配置（状态验证）
 
-- [ ] 23. 实现ChatGPT平台适配器
-  - 需求：REQ-5.1 支持ChatGPT平台
-  - 文件：`src/platform/chatgpt-adapter.js`（新建）
-  - 验证：在chat.openai.com控制台显示 "ChatGPTAdapter loaded: found X response containers, Y copy buttons"
-  
-  - [ ] 23.1 实现ChatGPT DOM选择器
-    - 查找[data-message-author-role="assistant"]容器
-  - [ ] 23.2 实现ChatGPT复制按钮识别
-    - 识别复制按钮特征和位置关系
-  - [ ] 23.3 测试基础高亮功能
-    - 在ChatGPT页面选中AI回复文本能正常高亮
-
-- [ ] 24. 实现Claude平台适配器  
-  - 需求：REQ-5.1 支持Claude平台
-  - 文件：`src/platform/claude-adapter.js`（新建）
-  - 验证：在claude.ai控制台显示 "ClaudeAdapter loaded: found X response containers, Y copy buttons"
-  
-  - [ ] 24.1 实现Claude DOM选择器
-    - 根据Claude页面结构识别AI回复区域
-  - [ ] 24.2 实现Claude复制按钮识别
-    - 识别Claude特有的复制按钮样式
-  - [ ] 24.3 测试基础高亮功能
-    - 在Claude页面选中AI回复文本能正常高亮
-
-## 5C. 平台检测与配置
-
-- [ ] 25. 更新Chrome扩展配置支持多域名
-  - 需求：REQ-4.4 扩展权限配置
+- [ ] 24. 更新Chrome扩展支持多域名
+  - 需求：REQ-4.4 扩展权限配置  
   - 文件：`manifest.json`（修改）
-  - 验证：扩展能在gemini.google.com, chat.openai.com, claude.ai三个域名自动激活
+  - 验证：重新加载扩展 → 检查扩展在3个域名都能激活
   
-  - [ ] 25.1 添加多域名匹配规则
-    - content_scripts添加ChatGPT和Claude域名
-  - [ ] 25.2 确保权限最小化原则
-    - 只请求必要的域名权限
+  - [ ] 24.1 添加ChatGPT和Claude域名到content_scripts
+  - [ ] 24.2 添加对应的host_permissions
 
-- [ ] 26. 实现智能平台检测和初始化
+- [ ] 25. 实现智能平台检测
   - 需求：REQ-4.1 自动平台识别
   - 文件：`src/content.js`（扩展）
-  - 验证：控制台显示 "Platform detected: [platform-name], initializing [AdapterName]"
+  - 验证：访问不同平台 → Console显示对应平台检测结果
   
-  - [ ] 26.1 平台检测优先级逻辑
-    - 按域名准确匹配对应适配器
-  - [ ] 26.2 适配器加载失败降级处理
-    - 控制台警告 + 尝试通用检测逻辑
-  - [ ] 26.3 初始化完整性验证
-    - 确保适配器方法都正常工作
+  - [ ] 25.1 按域名匹配适配器
+  - [ ] 25.2 失败时显示降级警告
 
 ## 验证重点
 
