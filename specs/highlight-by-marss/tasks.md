@@ -1,16 +1,17 @@
-# AI Highlight Assistant - 渐进式实现任务清单（含评论功能）
+# Highlight by Marss - 渐进式实现任务清单（含评论功能）
 
 ## 阶段1：基础架构 - 立即可见
 
 - [x] 1. 创建最小Chrome扩展
   - 需求：REQ-3.1 自动激活高亮功能
   - 文件：`manifest.json`, `src/content.js`
-  - 验证：**已完成** - 在Chrome扩展管理页面看到扩展加载成功，在Gemini页面控制台看到"AI Highlight Assistant loaded"消息
+  - 验证：**已完成** - 在Chrome扩展管理页面看到扩展加载成功，在Gemini页面控制台看到"Highlight by Marss loaded"消息
 
 - [x] 2. 实现基础文本高亮功能
   - 需求：REQ-1.2 高亮显示选中文本
   - 文件：`src/content.js`（扩展）
   - 验证：**已完成** - 在Gemini页面选中任意文本，文本立即变成黄色背景
+  - **重要修复**：保持选区状态，高亮后可以Ctrl+C复制选中文本
   
   - [x] 2.1 监听文本选择事件
     - document.addEventListener('mouseup')
@@ -295,7 +296,7 @@
 ## 当前项目结构（含评论功能）
 
 ```
-ai-highlight-assistant/
+highlight-by-marss/
 ├── manifest.json           # Chrome扩展配置
 ├── src/
 │   ├── content.js         # 主要逻辑（高亮功能+范围限制）

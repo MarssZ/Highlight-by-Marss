@@ -1,4 +1,4 @@
-// AI Highlight Assistant - Comment Manager
+// Highlight by Marss - Comment Manager
 // 管理评论功能的专业UI界面
 
 

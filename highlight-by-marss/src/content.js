@@ -1,4 +1,4 @@
-// AI Highlight Assistant - Content Script
+// Highlight by Marss - Content Script
 
 // 存储所有高亮范围
 let highlights = new Map();
@@ -230,8 +230,8 @@ function applyHighlightCSS(selection) {
       justHighlighted = false;
     }, 300); // 300ms内的点击不触发评论
     
-    // 清除选择
-    selection.removeAllRanges();
+    // 保持选区以便用户可以Ctrl+C复制
+    // selection.removeAllRanges(); // 注释掉，让用户可以复制高亮的文本
     
   } catch (error) {
     console.warn('Could not apply CSS highlight:', error.message);
@@ -247,7 +247,7 @@ function applyHighlightFallback(selection) {
     if (range.startContainer.nodeType !== 3 || range.endContainer.nodeType !== 3 || 
         range.startContainer !== range.endContainer) {
       // Skipping complex selection for fallback method
-      selection.removeAllRanges();
+      // selection.removeAllRanges(); // 保持选区以便复制
       return;
     }
     
@@ -267,8 +267,8 @@ function applyHighlightFallback(selection) {
     
     // Fallback highlight applied
     
-    // 清除选择
-    selection.removeAllRanges();
+    // 保持选区以便用户可以Ctrl+C复制
+    // selection.removeAllRanges(); // 注释掉，让用户可以复制高亮的文本
     
   } catch (error) {
     console.warn('Could not apply fallback highlight:', error.message);

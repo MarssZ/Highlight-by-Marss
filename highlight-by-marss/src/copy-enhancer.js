@@ -1,4 +1,4 @@
-// AI Highlight Assistant - Copy Enhancer
+// Highlight by Marss - Copy Enhancer
 // 增强现有复制按钮功能，使用平台适配器
 
 
