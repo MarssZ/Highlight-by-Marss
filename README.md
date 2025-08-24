@@ -62,26 +62,18 @@
 - **🆕 模块化架构**：平台适配器模式，统一接口抽象
 - **🆕 扩展性**：为多平台支持奠定坚实基础，轻松扩展至更多的AI平台。
 
-## 🛠️ 安装方法
-
-### 开发者安装
-1. 克隆此仓库到本地
-2. 打开Chrome扩展管理页面 `chrome://extensions/`
-3. 开启"开发者模式"
-4. 点击"加载已解压的扩展程序"
-5. 拖动目录至扩展程序（highlight-by-marss）
-6. 访问支持的平台开始使用：
-   - [Gemini](https://gemini.google.com)
-   - [Claude](https://claude.ai)
-   - [Grok](https://grok.com)
-   - [ChatGPT](https://chat.openai.com)
-   - [豆包](https://doubao.com)
-
-
-### 验证安装
+## 🛠️ 验证安装
 - F12控制台显示 "Highlight by Marss loaded"
 - 在AI回复中选择文本能正常高亮
 - 点击高亮文本能弹出评论输入框
+
+### 支持平台
+访问以下平台开始使用：
+- [Gemini](https://gemini.google.com)
+- [Claude](https://claude.ai)
+- [Grok](https://grok.com)
+- [ChatGPT](https://chat.openai.com)
+- [豆包](https://doubao.com)
 
 ## 📁 项目结构
 
@@ -108,14 +100,6 @@ highlight-by-marss/
         └── tasks.md       # 任务清单
 ```
 
-## 🎯 支持平台
-
-### ✅ 已支持
-- **Gemini** (gemini.google.com)
-- **Claude** (claude.ai) 
-- **Grok** (grok.com)
-- **ChatGPT** (chat.openai.com / chatgpt.com)
-- **豆包** (doubao.com / www.doubao.com)
 
 ## 🔮 未来规划
 

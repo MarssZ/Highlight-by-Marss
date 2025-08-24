@@ -49,25 +49,33 @@ The design philosophy of this plugin is:
 - **🆕 Modular architecture**: Platform adapter pattern with unified interface abstraction
 - **🆕 Extensibility**: Solid foundation for multi-platform support, easy expansion to more AI platforms
 
-## 🛠️ Installation
+## 🚀 Installation Guide
 
-### Developer Installation
-1. Clone this repository locally
-2. Open Chrome extension management page `chrome://extensions/`
-3. Enable "Developer mode"
-4. Click "Load unpacked extension"
-5. Drag the directory to extensions (highlight-by-marss)
-6. Visit supported platforms to start using:
-   - [Gemini](https://gemini.google.com)
-   - [Claude](https://claude.ai)
-   - [Grok](https://grok.com)
-   - [ChatGPT](https://chat.openai.com)
-   - [Doubao](https://doubao.com)
+### Download and Install
+1. Download the latest plugin package (highlight-by-marss.zip) from [Release page](https://github.com/MarssZ/Highlight-by-Marss/releases/tag/download).
+2. Extract the downloaded package to a convenient location, e.g., `C:\highlight-by-marss`.
+3. Open Chrome browser and go to the extensions management page (`chrome://extensions/`).
+4. Enable "Developer mode".
+5. Click "Load unpacked extension" and drag the extracted directory `C:\highlight-by-marss` into it.
+6. The plugin icon will appear in the browser toolbar.
 
-### Installation Verification
+### Usage Workflow
+1. Highlight text by selection, add comments by clicking.
+2. Click the corresponding copy button.
+3. Press CTRL+V in the reply box to see the XML-marked AI content copied to the reply box.
+
+## 🛠️ Installation Verification
 - F12 console shows "Highlight by Marss loaded"
 - Selecting text in AI responses highlights normally
 - Clicking highlighted text opens comment input box
+
+### Supported Platforms
+Visit the following platforms to start using:
+- [Gemini](https://gemini.google.com)
+- [Claude](https://claude.ai)
+- [Grok](https://grok.com)
+- [ChatGPT](https://chat.openai.com)
+- [Doubao](https://doubao.com)
 
 ## 📁 Project Structure
 
@@ -94,14 +102,6 @@ highlight-by-marss/
         └── tasks.md       # Task list
 ```
 
-## 🎯 Supported Platforms
-
-### ✅ Currently Supported
-- **Gemini** (gemini.google.com)
-- **Claude** (claude.ai) 
-- **Grok** (grok.com)
-- **ChatGPT** (chat.openai.com / chatgpt.com)
-- **Doubao** (doubao.com / www.doubao.com)
 
 ## 🔮 Future Plans
 
