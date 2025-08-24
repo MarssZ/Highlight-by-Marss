@@ -60,9 +60,9 @@ The design philosophy of this plugin is:
 6. The plugin icon will appear in the browser toolbar.
 
 ### Usage Workflow
-1. Highlight text by selection, add comments by clicking.
-2. Click the corresponding copy button.
-3. Press CTRL+V in the reply box to see the XML-marked AI content copied to the reply box.
+1. Highlight text by selection, click to add comments
+2. Click the copy button below AI responses
+3. Paste to get content with XML markup
 
 ## 🛠️ Installation Verification
 - F12 console shows "Highlight by Marss loaded"
