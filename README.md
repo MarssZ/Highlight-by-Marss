@@ -13,7 +13,7 @@
 ## 🚀 使用指南
 
 ### 下载并安装
-1. 从 [Release 页面](https://github.com/MarssPython/highlight-by-marss/releases) 下载最新版本的插件压缩包（highlight-by-marss.zip）。
+1. 从 [Release 页面](https://github.com/MarssZ/Highlight-by-Marss/releases/tag/download) 下载最新版本的插件压缩包（highlight-by-marss.zip）。
 2. 解压下载的压缩包到一个方便的位置，例如 `C:\highlight-by-marss`。
 3. 打开Chrome浏览器，进入扩展管理页面（`chrome://extensions/`）。
 4. 开启"开发者模式"。
