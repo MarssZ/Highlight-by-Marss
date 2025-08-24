@@ -12,6 +12,19 @@
 
 ## 🚀 使用指南
 
+### 下载并安装
+1. 从 [Release 页面](https://github.com/MarssPython/highlight-by-marss/releases) 下载最新版本的插件压缩包（highlight-by-marss.zip）。
+2. 解压下载的压缩包到一个方便的位置，例如 `C:\highlight-by-marss`。
+3. 打开Chrome浏览器，进入扩展管理页面（`chrome://extensions/`）。
+4. 开启"开发者模式"。
+5. 点击"加载已解压的扩展程序"，将解压后的目录 `C:\highlight-by-marss` 拖入。
+6. 插件图标将出现在浏览器工具栏中。
+
+### 使用流程
+1. 通过划词高亮、点击评论。
+2. 点击对应的复制图片
+3. CTRL+V在回复框中，即可看到被XML标记的AI内容被复制到回复框中。
+
 ### 基础操作
 1. 选中AI回复文本自动高亮
 2. Ctrl+点击移除高亮（Mac用Cmd+点击）

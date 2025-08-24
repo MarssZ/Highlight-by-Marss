@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "HighLight by Marss",
   "version": "1.5.0",
-  "description": "专为AI聊天平台设计的智能高亮工具(支持Gemini、Claude、Grok、ChatGPT、豆包)，轻松标记重要内容并添加个人评论。",
+  "description": "AI chat platform highlighting tool. Easily highlight important content and add personal comments. Supports Gemini, Claude, Grok, ChatGPT, and Doubao.",
   "permissions": [
     "storage",
     "contextMenus",
