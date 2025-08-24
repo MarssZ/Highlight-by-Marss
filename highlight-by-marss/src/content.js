@@ -144,6 +144,9 @@ function initPlatformAdapter() {
       if (window.GrokAdapter) {
         factory.register(new window.GrokAdapter());
       }
+      if (window.ChatGPTAdapter) {
+        factory.register(new window.ChatGPTAdapter());
+      }
       
       // 检测当前平台并加载适配器
       platformAdapter = factory.detectAndLoad();
