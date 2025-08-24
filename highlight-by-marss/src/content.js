@@ -147,6 +147,9 @@ function initPlatformAdapter() {
       if (window.ChatGPTAdapter) {
         factory.register(new window.ChatGPTAdapter());
       }
+      if (window.DoubaoAdapter) {
+        factory.register(new window.DoubaoAdapter());
+      }
       
       // 检测当前平台并加载适配器
       platformAdapter = factory.detectAndLoad();
