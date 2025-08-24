@@ -178,14 +178,30 @@
   - [x] 24.4 在Claude平台验证功能正常 - 所有功能测试通过
   - [x] 24.5 清理调试信息，保持代码简洁
 
-- [ ] 25. 支持ChatGPT平台 (chat.openai.com)
-  - 需求：REQ-4.4 在Claude成功基础上扩展第二个平台
+- [x] 25. 支持Grok平台 (grok.com) 
+  - 需求：REQ-4.4 基于Claude成功经验扩展第三个平台
+  - 文件：`manifest.json`（扩展）, `src/platform/grok-adapter.js`（新建）
+  - 验证：**已完成** - Grok平台完整验证高亮、评论、复制功能正常
+  - **重要经验**：发现并解决了3个关键适配器陷阱
+  
+  - [x] 25.1 manifest.json添加grok.com域名权限
+  - [x] 25.2 基于用户提供的DOM结构（dom_grok.md）分析
+  - [x] 25.3 创建GrokAdapter类，识别AI vs用户消息差异
+  - [x] 25.4 修复DOM结构理解错误（兄弟关系vs父子关系）
+  - [x] 25.5 修复选区检测逻辑（isValidResponseContainer）
+  - [x] 25.6 修复复制关联逻辑（getCopyButtonContainer）
+  - [x] 25.7 生成平台适配开发指南避免重复问题
+
+- [ ] 26. 支持ChatGPT平台 (chat.openai.com)
+  - 需求：REQ-4.4 基于Grok适配经验和标准指南开发
   - 文件：`manifest.json`（扩展）, `src/platform/chatgpt-adapter.js`（新建）
   - 验证：在ChatGPT平台完整验证所有功能
+  - **开发策略**：严格按照`docs/platform-adapter-guide.md`流程执行
   
-  - [ ] 25.1 manifest.json添加chat.openai.com域名权限
-  - [ ] 25.2 创建ChatGPTAdapter类实现平台接口
-  - [ ] 25.3 在ChatGPT平台验证完整功能流程
+  - [ ] 26.1 DOM结构深度分析（60%时间投入）
+  - [ ] 26.2 用户vs AI消息布局差异识别
+  - [ ] 26.3 使用标准适配器模板开发
+  - [ ] 26.4 按3核心流程验证功能
 
 ## 验证重点
 
@@ -195,11 +211,18 @@
 - ✅ 用户体验无变化
 - ✅ Console显示适配器信息
 
-### 新平台验证
+### Claude平台验证
 - ✅ 基础高亮功能正常
 - ✅ 复制按钮正确识别
 - ✅ AI回复区域准确限制
 - ✅ Console输出检测结果
+
+### Grok平台验证（经验总结）
+- ✅ 克服DOM结构理解错误
+- ✅ 解决用户vs AI消息混淆
+- ✅ 修复选区检测和复制关联双重失败
+- ✅ 完整功能流程：高亮→评论→带标签复制
+- ✅ 建立标准化开发流程和检查清单
 
 ## 后续增强功能（可选）
 

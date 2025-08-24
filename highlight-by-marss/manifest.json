@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "HighLight by Marss",
-  "version": "1.1.1",
-  "description": "专为AI聊天平台设计的智能高亮工具，轻松标记重要内容并添加个人评论",
+  "version": "1.3.0",
+  "description": "专为AI聊天平台设计的智能高亮工具(支持Gemini、Claude、Grok)，轻松标记重要内容并添加个人评论。",
   "permissions": [
     "storage",
     "contextMenus",
@@ -10,12 +10,13 @@
   ],
   "host_permissions": [
     "https://gemini.google.com/*",
-    "https://claude.ai/*"
+    "https://claude.ai/*",
+    "https://grok.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://gemini.google.com/*", "https://claude.ai/*"],
-      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/platform/claude-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
+      "matches": ["https://gemini.google.com/*", "https://claude.ai/*", "https://grok.com/*"],
+      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/platform/claude-adapter.js", "src/platform/grok-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
       "css": ["styles/content.css", "styles/comment.css"],
       "run_at": "document_end"
     }

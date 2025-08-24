@@ -141,6 +141,9 @@ function initPlatformAdapter() {
       if (window.ClaudeAdapter) {
         factory.register(new window.ClaudeAdapter());
       }
+      if (window.GrokAdapter) {
+        factory.register(new window.GrokAdapter());
+      }
       
       // 检测当前平台并加载适配器
       platformAdapter = factory.detectAndLoad();
