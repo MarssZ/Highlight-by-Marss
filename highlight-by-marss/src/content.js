@@ -461,3 +461,22 @@ if (document.readyState === 'loading') {
 } else {
   initExtension();
 }
+
+// 🆕 监听来自background的消息（对话导出功能）
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'exportConversation') {
+    // 检查是否有 conversationExporter 模块
+    if (typeof window.conversationExporter !== 'undefined') {
+      // 调用对话导出模块
+      window.conversationExporter.export()
+        .then(result => sendResponse(result))
+        .catch(error => sendResponse({success: false, error: error.message}));
+    } else {
+      // 模块还未加载，返回开发中提示
+      sendResponse({success: false, error: '对话导出功能开发中'});
+    }
+
+    // 返回true表示异步响应
+    return true;
+  }
+});

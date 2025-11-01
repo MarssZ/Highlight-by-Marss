@@ -12,7 +12,12 @@
       "Bash(python:*)",
       "Bash(timeout:*)",
       "Bash(tree:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(echo:*)",
+      "Bash(\"E:\\MarssPython\\highlight-by-marss\\highlight-by-marss\\src\\conversation-exporter.js\")",
+      "Bash(touch:*)"
     ],
     "deny": []
   },
