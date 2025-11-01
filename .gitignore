@@ -1,12 +1,22 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
+# Build artifacts
 dist/
-wheels/
-*.egg-info
+releases/*.zip
+*.rar
 
-# Virtual environments
-.venv
-highlight-by-marss_V*.zip
-highlight-by-marss.rar
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude local settings
+.claude/settings.local.json
+.claude/output-styles/
+
+# Temporary files
+*.tmp
+*.log

@@ -10,8 +10,11 @@
       "Bash(uv add:*)",
       "Bash(uv run:*)",
       "Bash(python:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(tree:*)",
+      "Bash(test:*)"
     ],
     "deny": []
-  }
+  },
+  "outputStyle": "linus"
 }
