@@ -141,9 +141,9 @@ class GeminiAdapter extends PlatformAdapter {
    * @param {Element} clonedContainer 克隆的容器元素
    * @returns {void}
    *
-   * 清理目标：
-   * 1. <source-footnote> - 包含上标引用的整个元素（包括内部的 <sup>）
-   * 2. <sources-carousel-inline> - 末尾的引用链接芯片
+   * 策略：删除CSS伪元素的数据源，阻止浏览器在textContent时提取伪元素内容
+   * - 删除 data-turn-source-index 属性 → CSS ::after 无内容可渲染
+   * - 删除 <sources-carousel-inline> → 末尾引用链接
    */
   cleanClonedContainer(clonedContainer) {
     if (!clonedContainer) {
@@ -154,33 +154,26 @@ class GeminiAdapter extends PlatformAdapter {
     console.log('🔧 [Gemini] 开始清理克隆容器的引用标记...');
     console.log('📝 [Gemini] 清理前 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
 
-    // 删除所有 source-footnote 元素（包含上标引用）
-    const footnotes = clonedContainer.querySelectorAll('source-footnote');
-    console.log(`📊 [Gemini] 找到 ${footnotes.length} 个 <source-footnote> 元素`);
+    // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
+    const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
+    console.log(`📊 [Gemini] 找到 ${sups.length} 个 <sup data-turn-source-index> 元素`);
 
-    if (footnotes.length > 0) {
-      footnotes.forEach((footnote, index) => {
-        // 在删除前记录信息
-        const sup = footnote.querySelector('sup[data-turn-source-index]');
-        const refIndex = sup ? sup.getAttribute('data-turn-source-index') : '未知';
-        const textBefore = footnote.textContent.trim();
-
-        console.log(`  - footnote[${index}]: refIndex=${refIndex}, textContent="${textBefore}"`);
-
-        // 删除整个 source-footnote 元素
-        footnote.remove();
+    if (sups.length > 0) {
+      sups.forEach((sup, index) => {
+        const refIndex = sup.getAttribute('data-turn-source-index');
+        console.log(`  - sup[${index}]: 删除 data-turn-source-index="${refIndex}"`);
+        sup.removeAttribute('data-turn-source-index');
       });
-
-      console.log('📝 [Gemini] 清理后 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
     }
 
-    // 删除末尾的引用链接芯片
+    // 策略2: 删除末尾的引用链接芯片
     const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
     console.log(`📊 [Gemini] 找到 ${carousels.length} 个 <sources-carousel-inline> 元素`);
     if (carousels.length > 0) {
       carousels.forEach(carousel => carousel.remove());
     }
 
+    console.log('📝 [Gemini] 清理后 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
     console.log('✅ [Gemini] 引用标记清理完成');
   }
 
