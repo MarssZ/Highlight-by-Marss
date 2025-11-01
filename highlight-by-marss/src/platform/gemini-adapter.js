@@ -187,20 +187,20 @@ class GeminiAdapter extends PlatformAdapter {
         cloned.querySelectorAll(selector).forEach(el => el.remove());
       });
 
-      // 🧪 验证：同时输出HTML和纯文本
+      // 获取清理后的HTML
       const html = cloned.innerHTML;
-      const text = cloned.textContent || cloned.innerText || '';
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🧪 验证HTML结构：');
-      console.log('📝 HTML长度:', html.length);
-      console.log('📝 Text长度:', text.length);
-      console.log('📋 HTML前500字符:');
-      console.log(html.substring(0, 500));
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      // 暂时返回纯文本
-      return this._cleanGeminiCitations(text);
+      // 使用 turndown 转换为 Markdown
+      if (typeof window.htmlToMarkdown === 'function') {
+        const markdown = window.htmlToMarkdown(html);
+        // 清理 Gemini 引用标记
+        return this._cleanGeminiCitations(markdown);
+      } else {
+        // 降级：使用纯文本
+        console.warn('htmlToMarkdown 未加载，降级使用纯文本');
+        const text = cloned.textContent || cloned.innerText || '';
+        return this._cleanGeminiCitations(text);
+      }
     }
   }
 
