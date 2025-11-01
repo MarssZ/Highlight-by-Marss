@@ -213,11 +213,11 @@ function cleanGeminiCitations(text) {
   // 删除 [cite_start] 标记
   let cleaned = text.replace(/\[cite_start\]/g, '');
 
-  // 删除 [cite: X] 或 [cite: X, Y, Z] 标记（保留周围的空格/换行结构）
-  cleaned = cleaned.replace(/\s*\[cite:\s*[\d,\s]+\]/g, '');
+  // 删除 [cite: X] 或 [cite: X, Y, Z] 标记（只删除标记本身，不删除周围的空白）
+  cleaned = cleaned.replace(/\[cite:\s*[\d,\s]+\]/g, '');
 
   // 只清理连续的空格（不包括换行符）
-  // cleaned = cleaned.replace(/ {2,}/g, ' ');
+  cleaned = cleaned.replace(/ {1,}/g, ' ');
 
   // 清理行首空格
   // cleaned = cleaned.replace(/^ +/gm, '');
