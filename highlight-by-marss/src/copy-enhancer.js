@@ -137,64 +137,72 @@ function setupCopyButtonListener(button) {
   // 标记已处理
   button.setAttribute('data-ai-highlight-enhanced', 'true');
 
-  // 监听点击事件（捕获阶段，优先执行）
+  // 监听点击事件
   button.addEventListener('click', function(event) {
-    console.log('🎯 [CopyEnhancer] 捕获复制按钮点击事件');
+    console.log('🎯 [CopyEnhancer] 复制按钮被点击');
 
-    // 阻止原生复制事件
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    console.log('🛑 [CopyEnhancer] 已阻止原生复制事件');
-
-    // 立即执行增强复制（不延迟）
-    handleCopyButtonClick(button, event);
-  }, true); // true = 捕获阶段
+    // 延迟处理，让原始复制操作先完成
+    setTimeout(() => {
+      handleCopyButtonClick(button, event);
+    }, 100); // 100ms 足够 Gemini 完成复制
+  }, true);
 }
 
 // 处理复制按钮点击
-function handleCopyButtonClick(button, event) {
+async function handleCopyButtonClick(button, event) {
   try {
-    console.log('🖱️ [CopyEnhancer] 复制按钮被点击');
+    console.log('🔧 [CopyEnhancer] 开始处理复制内容...');
 
-    // 查找对应的AI回复容器
+    // 读取剪贴板（Gemini 已经复制了 Markdown 格式的内容）
+    let clipboardText = await navigator.clipboard.readText();
+
+    console.log('📋 [CopyEnhancer] 读取剪贴板内容 (前100字符):', clipboardText.substring(0, 100));
+
+    // 清理 Gemini 的引用标记
+    const cleanedText = cleanGeminiCitations(clipboardText);
+
+    console.log('🧹 [CopyEnhancer] 清理后内容 (前100字符):', cleanedText.substring(0, 100));
+
+    // 检查是否有高亮需要处理
     const messageContainer = findMessageContainer(button);
+    const hasHighlights = messageContainer ? checkForHighlights(messageContainer) : false;
 
-    if (!messageContainer) {
-      console.warn('⚠️ [CopyEnhancer] 未找到消息容器，跳过');
-      return;
+    let finalText = cleanedText;
+
+    if (hasHighlights && messageContainer) {
+      console.log('🎨 [CopyEnhancer] 检测到高亮，添加高亮标签...');
+      // TODO: 在 Markdown 中添加高亮标签（保留格式）
+      // 暂时先用清理后的文本
     }
 
-    console.log('✅ [CopyEnhancer] 找到消息容器');
+    // 写回剪贴板
+    await navigator.clipboard.writeText(finalText);
 
-    // 🔍 诊断：输出容器信息
-    console.log('📦 [CopyEnhancer] 容器诊断信息：');
-    console.log('  - 容器类名:', messageContainer.className);
-    console.log('  - 容器ID:', messageContainer.id);
-    console.log('  - 容器标签:', messageContainer.tagName);
-    console.log('  - 文本内容(前100字符):', messageContainer.textContent.substring(0, 100));
-
-    // 检查是否包含高亮内容（用于日志）
-    const hasHighlights = checkForHighlights(messageContainer);
-    console.log(`📊 [CopyEnhancer] 是否有高亮: ${hasHighlights}`);
-
-    // 🆕 无论是否有高亮，都生成增强内容（清理引用标记 + 可选的高亮标签）
-    console.log('🎨 [CopyEnhancer] 生成增强内容（清理引用标记）...');
-
-    const enhancedContent = generateHighlightedText(messageContainer);
-
-    if (enhancedContent) {
-      // 覆写剪贴板内容
-      copyToClipboard(enhancedContent);
-      console.log('✅ Enhanced content copied' + (hasHighlights ? ' with highlights and comments' : ' (clean text)'));
-    } else {
-      console.warn('⚠️ Failed to generate enhanced content');
-    }
+    console.log('✅ [CopyEnhancer] 增强复制完成' + (hasHighlights ? ' (含高亮标签)' : ' (已清理引用)'));
 
   } catch (error) {
-    console.error('Error handling copy button click:', error);
+    console.error('❌ [CopyEnhancer] 处理失败:', error);
   }
+}
+
+// 清理 Gemini 的引用标记
+function cleanGeminiCitations(text) {
+  if (!text) return text;
+
+  console.log('🧹 [CopyEnhancer] 清理 Gemini 引用标记...');
+
+  // 删除 [cite_start] 标记
+  let cleaned = text.replace(/\[cite_start\]/g, '');
+
+  // 删除 [cite: X] 或 [cite: X, Y, Z] 标记
+  cleaned = cleaned.replace(/\s*\[cite:\s*[\d,\s]+\]/g, '');
+
+  // 清理多余空格
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+
+  console.log('✅ [CopyEnhancer] 引用标记清理完成');
+
+  return cleaned;
 }
 
 // 查找消息容器
