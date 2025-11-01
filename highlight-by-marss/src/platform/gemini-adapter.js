@@ -100,7 +100,7 @@ class GeminiAdapter extends PlatformAdapter {
    */
   getCopyButtonContainer(button) {
     if (!button) return null;
-    
+
     // 向上查找消息容器
     let container = button.parentElement;
     while (container && container !== document.body) {
@@ -109,8 +109,46 @@ class GeminiAdapter extends PlatformAdapter {
       }
       container = container.parentElement;
     }
-    
+
     return null;
+  }
+
+  /**
+   * 清理克隆容器中的Gemini引用标记
+   * @param {Element} clonedContainer 克隆的容器元素
+   * @returns {void}
+   *
+   * 清理目标：
+   * 1. <source-footnote> - 上标引用数字（如 35, 36）
+   * 2. <sources-carousel-inline> - 末尾的引用链接芯片
+   */
+  cleanClonedContainer(clonedContainer) {
+    if (!clonedContainer) {
+      console.warn('🔴 [Gemini] cleanClonedContainer: 容器为空');
+      return;
+    }
+
+    console.log('🔧 [Gemini] 开始清理克隆容器的引用标记...');
+
+    // 删除所有上标引用标记
+    const footnotes = clonedContainer.querySelectorAll('source-footnote');
+    console.log(`📊 [Gemini] 找到 ${footnotes.length} 个 <source-footnote> 元素`);
+    if (footnotes.length > 0) {
+      footnotes.forEach((footnote, index) => {
+        const text = footnote.textContent.trim();
+        console.log(`  - footnote[${index}]: "${text}"`);
+        footnote.remove();
+      });
+    }
+
+    // 删除末尾的引用链接芯片
+    const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
+    console.log(`📊 [Gemini] 找到 ${carousels.length} 个 <sources-carousel-inline> 元素`);
+    if (carousels.length > 0) {
+      carousels.forEach(carousel => carousel.remove());
+    }
+
+    console.log('✅ [Gemini] 引用标记清理完成');
   }
 
   /**

@@ -151,36 +151,35 @@ function setupCopyButtonListener(button) {
 // 处理复制按钮点击
 function handleCopyButtonClick(button, event) {
   try {
+    console.log('🖱️ [CopyEnhancer] 复制按钮被点击');
+
     // 查找对应的AI回复容器
     const messageContainer = findMessageContainer(button);
-    
+
     if (!messageContainer) {
-      // No message container found
+      console.warn('⚠️ [CopyEnhancer] 未找到消息容器，跳过');
       return;
     }
-    
-    // 检查是否包含高亮内容
+
+    console.log('✅ [CopyEnhancer] 找到消息容器');
+
+    // 检查是否包含高亮内容（用于日志）
     const hasHighlights = checkForHighlights(messageContainer);
-    
-    if (hasHighlights) {
-      // Message contains highlights, generating enhanced copy content
-      
-      // 🆕 生成带高亮和评论标签的内容
-      const enhancedContent = generateHighlightedText(messageContainer);
-      
-      if (enhancedContent) {
-        // Generated enhanced content
-        
-        // 覆写剪贴板内容
-        copyToClipboard(enhancedContent);
-        console.log('✅ Enhanced content copied with highlights and comments');
-      } else {
-        console.warn('⚠️ Failed to generate enhanced content');
-      }
+    console.log(`📊 [CopyEnhancer] 是否有高亮: ${hasHighlights}`);
+
+    // 🆕 无论是否有高亮，都生成增强内容（清理引用标记 + 可选的高亮标签）
+    console.log('🎨 [CopyEnhancer] 生成增强内容（清理引用标记）...');
+
+    const enhancedContent = generateHighlightedText(messageContainer);
+
+    if (enhancedContent) {
+      // 覆写剪贴板内容
+      copyToClipboard(enhancedContent);
+      console.log('✅ Enhanced content copied' + (hasHighlights ? ' with highlights and comments' : ' (clean text)'));
     } else {
-      // Message has no highlights, using default copy
+      console.warn('⚠️ Failed to generate enhanced content');
     }
-    
+
   } catch (error) {
     console.error('Error handling copy button click:', error);
   }
@@ -310,9 +309,26 @@ function getElementAttributes(element) {
 // 🆕 生成带高亮和评论标签的文本内容
 function generateHighlightedText(container) {
   try {
+    console.log('🔍 [CopyEnhancer] ========== 开始生成高亮文本 ==========');
+
     // 克隆容器以避免修改原DOM
     const clonedContainer = container.cloneNode(true);
-    
+    console.log('📋 [CopyEnhancer] 容器已克隆');
+
+    // 🆕 清理平台特定的引用标记（在提取textContent之前）
+    if (window.platformAdapter) {
+      console.log(`✅ [CopyEnhancer] platformAdapter 已加载: ${window.platformAdapter.getPlatformName()}`);
+
+      if (typeof window.platformAdapter.cleanClonedContainer === 'function') {
+        console.log('🧹 [CopyEnhancer] 调用 platformAdapter.cleanClonedContainer()...');
+        window.platformAdapter.cleanClonedContainer(clonedContainer);
+      } else {
+        console.warn('⚠️ [CopyEnhancer] platformAdapter.cleanClonedContainer 方法不存在');
+      }
+    } else {
+      console.warn('⚠️ [CopyEnhancer] platformAdapter 未初始化，跳过清理');
+    }
+
     // 处理DOM高亮 (.ai-highlight-fallback)
     const fallbackHighlights = clonedContainer.querySelectorAll('.ai-highlight-fallback');
     fallbackHighlights.forEach(highlight => {
@@ -324,6 +340,7 @@ function generateHighlightedText(container) {
     
     // 提取纯文本并替换标记为<highlight>标签
     let textContent = clonedContainer.textContent || clonedContainer.innerText || '';
+    console.log('📝 [CopyEnhancer] 提取原始textContent (前100字符):', textContent.substring(0, 100));
     textContent = textContent.replace(/\s+/g, ' ').trim(); // 清理空格
     
     // 🆕 处理CSS.highlights高亮，包含评论信息
@@ -362,8 +379,10 @@ function generateHighlightedText(container) {
         }
       }
     }
-    
+
     // Final enhanced content generated
+    console.log('📤 [CopyEnhancer] 最终文本 (前100字符):', textContent.substring(0, 100));
+    console.log('🔍 [CopyEnhancer] ========== 生成完成 ==========');
     return textContent;
     
   } catch (error) {

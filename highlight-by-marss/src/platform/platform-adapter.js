@@ -50,6 +50,20 @@ class PlatformAdapter {
   }
 
   /**
+   * 清理克隆容器中的平台特定元素（如引用标记）
+   * @param {Element} clonedContainer 克隆的容器元素
+   * @returns {void}
+   *
+   * 设计原则：在提取textContent之前删除平台特定的引用元素
+   * - 默认实现：不做任何清理（向后兼容）
+   * - 各平台按需重写，删除自己的引用DOM元素
+   */
+  cleanClonedContainer(clonedContainer) {
+    // 默认实现：不做任何清理
+    // 子类可以重写此方法来删除平台特定的引用元素
+  }
+
+  /**
    * 获取平台名称
    * @returns {string} 平台名称
    */
