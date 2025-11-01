@@ -11,20 +11,24 @@ AI Highlight Assistant 是一个 Chrome 浏览器扩展，为 AI 聊天平台提
 ### 1. "好品味"(Good Taste) - 消除特殊情况
 - 使用统一的平台适配器接口，避免为每个平台写特殊逻辑
 - 用数据结构设计替代复杂的条件判断
+- 清晰的单向数据流：DOM → 数据 → Markdown
 
 ### 2. "Never break userspace" - 零破坏性
 - 劫持原生复制按钮而非创建新 UI，保持用户习惯
 - 新增平台支持不影响现有功能
 - 向后兼容是铁律
+- 新功能完全独立，不影响现有高亮/评论功能
 
 ### 3. 实用主义 - 解决真实问题
-- 零依赖：不引入任何外部框架
+- 最小依赖原则：仅引入必要的、成熟的、零依赖的第三方库（如 Turndown）
 - 零 DOM 污染：使用 CSS.highlights API 而非修改 DOM
 - 简洁代码：Less is More
+- 不重新造轮子：HTML→Markdown用成熟库而非自己实现
 
 ### 4. 简洁执念 - 控制复杂度
 - 每个模块只做一件事并做好
 - 核心逻辑平台无关，差异通过适配器隔离
+- 新增对话导出功能 < 550行代码（含详细注释）
 
 ## 核心架构
 
@@ -52,27 +56,33 @@ graph TD
 
 ## 平台适配器接口
 
-**核心抽象** - 每个平台必须实现 5 个方法：
+**核心抽象** - 每个平台必须实现 8 个方法：
 
 ```javascript
 interface PlatformAdapter {
   // 平台检测
   detectPlatform(): boolean;
 
-  // DOM 元素识别
+  // DOM 元素识别（高亮/复制功能）
   findResponseContainers(): Element[];  // 查找所有 AI 回复容器
   findCopyButtons(): Element[];         // 查找所有复制按钮
 
-  // 业务逻辑验证
+  // 业务逻辑验证（高亮/复制功能）
   isValidResponseContainer(element: Element): boolean;  // 验证容器有效性
   getCopyButtonContainer(button: Element): Element;     // 获取按钮对应的容器
+
+  // 🆕 对话导出功能（新增3个方法）
+  findUserMessages(): Element[];                    // 查找所有用户消息容器
+  extractText(container: Element): string;          // 提取文本内容（HTML→Markdown）
+  getPlatformDisplayName(): string;                 // 获取平台显示名称
 }
 ```
 
 **设计原则**：
-- 所有平台差异都通过这 5 个方法隔离
+- 所有平台差异都通过这 8 个方法隔离
 - 核心逻辑完全平台无关
-- 新平台支持仅需实现适配器（30-50 行代码）
+- 新平台支持仅需实现适配器（85-120 行代码）
+- 对话导出功能复用现有适配器架构，无需重构
 
 ## 核心模块
 
@@ -84,6 +94,7 @@ interface PlatformAdapter {
 - 智能降级到传统 DOM 高亮
 - Ctrl+点击移除高亮，Ctrl+Z 撤销
 - 通过适配器验证 AI 回复容器
+- 🆕 监听来自background的导出对话消息（content.js:466-482）
 
 **平台无关性**：✅ 100% 平台无关
 
@@ -107,6 +118,94 @@ interface PlatformAdapter {
 - 处理评论的保存和编辑
 - 显示评论指示器（🔖）和工具提示
 - 评论数据的内存存储
+
+**平台无关性**：✅ 100% 平台无关
+
+### 4. 🆕 Conversation Exporter (conversation-exporter.js)
+**职责**：完整对话导出功能
+
+- 提取当前页面所有用户消息和AI回复
+- 按DOM顺序排序消息（使用 `compareDocumentPosition`）
+- 配对消息（用户问题 + AI回答 = 一轮对话）
+- 格式化为结构化Markdown（轮次、时间戳、平台名称）
+- 返回Markdown文本给background.js写入剪贴板
+- 错误处理（空页面、未支持平台、单条消息失败）
+
+**核心方法**：
+- `export()` - 主入口，协调整个导出流程
+- `_extractMessages()` - 提取用户消息和AI回复
+- `_sortMessagesByDOM()` - DOM顺序排序
+- `_pairMessages()` - 配对为对话轮次
+- `_formatMarkdown()` - 格式化为Markdown
+
+**平台依赖性**：依赖适配器的3个新方法
+- `findUserMessages()` - 查找用户消息容器
+- `extractText()` - 提取文本内容
+- `getPlatformDisplayName()` - 获取平台名称
+
+**代码行数**：~230行（含详细注释）
+
+### 5. 🆕 HTML to Markdown Converter (utils/html-to-markdown.js)
+**职责**：HTML→Markdown转换封装
+
+- 封装Turndown库，提供统一的转换接口
+- 配置Turndown选项（代码块风格、标题风格等）
+- 自定义规则：处理代码块的语言标识
+- 优雅降级：Turndown不可用时返回原HTML
+
+**核心功能**：
+```javascript
+function htmlToMarkdown(html) {
+  // 创建Turndown实例
+  const turndownService = new TurndownService({
+    codeBlockStyle: 'fenced',  // 使用 ``` 而非缩进
+    headingStyle: 'atx',       // 使用 # 而非下划线
+    bulletListMarker: '-',
+    hr: '---',
+    br: '\n'
+  });
+
+  // 自定义代码块规则
+  turndownService.addRule('fencedCodeBlock', { ... });
+
+  return turndownService.turndown(html);
+}
+```
+
+**平台无关性**：✅ 100% 平台无关
+
+**代码行数**：~76行
+
+### 6. 🆕 Turndown Library (libs/turndown.js)
+**来源**：第三方库（https://github.com/mixmark-io/turndown）
+
+**选择原因**：
+- ✅ 成熟稳定：16.7k stars，8年开发历史
+- ✅ 零依赖：无需引入其他库
+- ✅ 轻量级：26KB（压缩后）
+- ✅ 功能完整：支持代码块、列表、表格等所有Markdown元素
+
+**核心价值**：
+- 避免重新造轮子（自己实现HTML→Markdown转换需要数千行代码）
+- 完美保留Markdown格式（代码块、列表、加粗等）
+- 打破"零依赖"原则的唯一例外（Linus：实用主义优先）
+
+**集成方式**：
+- 在manifest.json中先于其他脚本加载
+- 暴露全局对象 `TurndownService`
+- 通过 `html-to-markdown.js` 封装调用
+
+### 7. Background Script (background.js)
+**职责**：扩展后台服务
+
+- 监听扩展图标点击事件（background.js:9-47）
+- 发送消息到content script请求导出对话
+- 接收导出结果，通过 `chrome.scripting.executeScript` 写入剪贴板
+- 显示成功/失败通知
+
+**新增功能**（对话导出相关）：
+- 扩展图标点击处理（~99行）
+- 剪贴板写入逻辑（executeScript方式，避免content script权限问题）
 
 **平台无关性**：✅ 100% 平台无关
 
@@ -158,11 +257,22 @@ interface PlatformAdapter {
 - **避免误操作**：防止在侧边栏、输入框等地方误触
 - **符合使用场景**：用户只需要高亮 AI 的回复内容
 
+### 🆕 为什么引入Turndown库打破"零依赖"原则？
+- **实用主义优先**：自己实现HTML→Markdown转换需要数千行代码
+- **成熟稳定**：16.7k stars，8年开发历史，零依赖
+- **完美保留格式**：代码块、列表、表格等所有Markdown元素
+- **符合Linus哲学**："不重新造轮子" - 理论完美不如实用可靠
+- **最小依赖原则**：仅引入必要的、成熟的、零依赖的第三方库
+
 ## 相关文档
 
-- **核心功能详细说明**：[CORE-FEATURES.md](CORE-FEATURES.md)
+- **核心功能详细说明**：[CORE-FEATURES.md](CORE-FEATURES.md) - 包含完整对话导出功能章节
 - **平台适配器开发指南**：[platforms/README.md](platforms/README.md)
 - **各平台适配器文档**：[platforms/](platforms/)
 - **需求文档**：[requirements.md](requirements.md)
 - **任务清单**：[tasks.md](tasks.md)
 - **技术验证报告**：[verify.md](verify.md)
+- **🆕 对话导出功能**：
+  - [conversation-export/requirements.md](../conversation-export/requirements.md) - 需求文档
+  - [conversation-export/design.md](../conversation-export/design.md) - 设计文档
+  - [conversation-export/tasks.md](../conversation-export/tasks.md) - 任务清单

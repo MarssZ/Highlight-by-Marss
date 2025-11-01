@@ -12,9 +12,9 @@
 提供一键复制整个对话的功能，自动格式化为结构化Markdown，清晰标记发言者和对话轮次。
 
 ### MVP范围
-- ✅ 复制当前页面所有可见对话
-- ✅ 自动格式化为带轮次的Markdown
-- ✅ 通过扩展图标触发
+- ✅ 复制当前页面所有可见对话 **[已实现]**
+- ✅ 自动格式化为带轮次的Markdown **[已实现]**
+- ✅ 通过扩展图标触发 **[已实现]**
 - ❌ 不支持选区复制（保留到二期）
 - ❌ 不处理懒加载历史消息（MVP阶段提示用户手动滚动）
 
@@ -22,38 +22,46 @@
 
 ## 需求
 
-### 需求1：一键复制全部对话
+### 需求1：一键复制全部对话 ✅ **[已实现]**
 **用户故事：** 作为AI聊天平台的用户，我希望通过点击扩展图标一键复制整个对话，以便快速保存完整的对话记录到Markdown文件中。
 
 #### 验收标准
-1. WHEN 用户点击浏览器工具栏的扩展图标 THEN 系统 SHALL 复制当前页面的全部对话内容到剪贴板
-2. WHEN 复制成功 THEN 系统 SHALL 显示成功提示（如："已复制 X 轮对话"）
-3. WHEN 复制失败（如页面无对话） THEN 系统 SHALL 显示错误提示（如："未检测到对话内容"）
-4. WHEN 用户在非AI聊天平台页面点击图标 THEN 系统 SHALL 显示提示（如："当前页面不支持此功能"）
+1. ✅ WHEN 用户点击浏览器工具栏的扩展图标 THEN 系统 SHALL 复制当前页面的全部对话内容到剪贴板
+   - **实现**：background.js:9-47 监听扩展图标点击事件，content.js:466-482 处理导出请求
+2. ✅ WHEN 复制成功 THEN 系统 SHALL 显示成功提示（如："已复制 X 轮对话"）
+   - **实现**：background.js:50-57 显示成功通知
+3. ✅ WHEN 复制失败（如页面无对话） THEN 系统 SHALL 显示错误提示（如："未检测到对话内容"）
+   - **实现**：conversation-exporter.js:33-36 检测空对话，background.js:58-68 显示错误通知
+4. ✅ WHEN 用户在非AI聊天平台页面点击图标 THEN 系统 SHALL 显示提示（如："当前页面不支持此功能"）
+   - **实现**：conversation-exporter.js:24-27 检测平台适配器，background.js:58-75 捕获异常
 
 ---
 
-### 需求2：Markdown格式化
+### 需求2：Markdown格式化 ✅ **[已实现]**
 **用户故事：** 作为用户，我希望复制的对话自动格式化为结构化Markdown，以便粘贴后能清晰看出对话轮次和发言者。
 
 #### 验收标准
-1. 复制的内容 SHALL 包含以下元素：
-   - 标题：`## 对话记录 [日期] [时间]`（如：`## 对话记录 2025-01-15 14:30`）
+1. ✅ 复制的内容 SHALL 包含以下元素：
+   - 标题：`# 对话记录 [日期] [时间]`（如：`# 对话记录 2025-01-15 14:30`）
    - 平台标识：`**平台：** [平台名称]`（如：`**平台：** Gemini`）
-   - 轮次分隔：每轮对话以 `### 第X轮` 标记
+   - 轮次分隔：每轮对话以 `## 第X轮` 标记
+   - **实现**：conversation-exporter.js:203-234 实现完整的Markdown格式化
 
-2. WHEN 格式化单条消息 THEN 系统 SHALL 使用以下格式：
+2. ✅ WHEN 格式化单条消息 THEN 系统 SHALL 使用以下格式：
    ```markdown
-   **用户：**
+   <*用户*>
    [用户消息内容]
 
-   **[平台名称]：**
+   <*[平台名称]*>
    [AI回复内容]
    ```
+   - **实现**：conversation-exporter.js:212-218
 
-3. IF 消息中包含代码块 THEN 系统 SHALL 保留原始Markdown代码块格式（三个反引号）
+3. ✅ IF 消息中包含代码块 THEN 系统 SHALL 保留原始Markdown代码块格式（三个反引号）
+   - **实现**：集成 Turndown 库（html-to-markdown.js:41-59），完美保留代码块格式
 
-4. IF 消息中包含特殊Markdown字符（如`*`、`#`等） THEN 系统 SHALL 正确转义或保留
+4. ✅ IF 消息中包含特殊Markdown字符（如`*`、`#`等） THEN 系统 SHALL 正确转义或保留
+   - **实现**：Turndown 库自动处理Markdown转义
 
 5. 完整输出示例 SHALL 符合以下格式：
    ```markdown
@@ -85,54 +93,63 @@
 
 ---
 
-### 需求3：平台识别与适配
+### 需求3：平台识别与适配 🟡 **[部分实现]**
 **用户故事：** 作为用户，我希望在不同AI平台都能使用此功能，且复制内容能标记具体平台名称，以便区分对话来源。
 
 #### 验收标准
-1. 系统 SHALL 支持以下平台：
-   - Gemini (gemini.google.com)
-   - Claude (claude.ai)
-   - ChatGPT (chatgpt.com 或 chat.openai.com)
-   - Grok (x.com)
+1. 🟡 系统 SHALL 支持以下平台：
+   - ✅ Gemini (gemini.google.com) - **已实现**
+   - ⬜ Claude (claude.ai) - **开发中（Phase 2）**
+   - ⬜ ChatGPT (chatgpt.com 或 chat.openai.com) - **开发中（Phase 2）**
+   - ⬜ Grok (x.com) - **开发中（Phase 2）**
 
-2. WHEN 在支持的平台复制对话 THEN 系统 SHALL 在Markdown中显示正确的平台名称：
-   - Gemini → `**平台：** Gemini`
-   - Claude → `**平台：** Claude`
-   - ChatGPT → `**平台：** ChatGPT`
-   - Grok → `**平台：** Grok`
+2. ✅ WHEN 在支持的平台复制对话 THEN 系统 SHALL 在Markdown中显示正确的平台名称：
+   - Gemini → `**平台：** Gemini` ✅
+   - **实现**：gemini-adapter.js:211-213 实现 getPlatformDisplayName()
 
-3. IF 用户在未支持的平台点击图标 THEN 系统 SHALL 显示提示："当前平台暂不支持对话导出"
+3. ✅ IF 用户在未支持的平台点击图标 THEN 系统 SHALL 显示提示："当前平台暂不支持对话导出"
+   - **实现**：conversation-exporter.js:24-27 检测平台适配器
 
 ---
 
-### 需求4：懒加载处理（MVP版本）
+### 需求4：懒加载处理（MVP版本） ⬜ **[未实现 - MVP范围外]**
 **用户故事：** 作为用户，当页面存在未加载的历史消息时，我希望系统能提示我需要手动加载，以便确保复制完整对话。
 
 #### 验收标准
-1. WHEN 检测到页面可能存在懒加载历史消息 THEN 系统 SHALL 在复制前显示提示：
+1. ⬜ WHEN 检测到页面可能存在懒加载历史消息 THEN 系统 SHALL 在复制前显示提示：
    - "检测到可能有未加载的历史消息，请滚动到页面顶部加载全部对话后再试"
+   - **状态**：暂未实现，留待后续版本
 
-2. IF 无法准确检测懒加载状态 THEN 系统 SHALL 在复制成功后的提示中加入提醒：
+2. ⬜ IF 无法准确检测懒加载状态 THEN 系统 SHALL 在复制成功后的提示中加入提醒：
    - "已复制 X 轮对话（如有历史消息未加载，请先滚动到顶部）"
+   - **状态**：暂未实现，留待后续版本
 
-3. MVP阶段 SHALL NOT 实现自动滚动加载历史消息功能
+3. ✅ MVP阶段 SHALL NOT 实现自动滚动加载历史消息功能
+   - **确认**：MVP版本不包含此功能
 
 ---
 
-### 需求5：数据提取准确性
+### 需求5：数据提取准确性 ✅ **[已实现]**
 **用户故事：** 作为用户，我希望复制的内容与页面显示完全一致，以便准确记录对话。
 
 #### 验收标准
-1. 系统 SHALL 按照时间顺序提取对话（从最早到最新）
+1. ✅ 系统 SHALL 按照时间顺序提取对话（从最早到最新）
+   - **实现**：conversation-exporter.js:130-156 使用 compareDocumentPosition 实现DOM顺序排序
 
-2. WHEN 提取AI回复内容 THEN 系统 SHALL 使用平台适配器已有的清理逻辑：
-   - 移除平台特有的引用标记（如Gemini的`[1]`、`[2]`）
+2. ✅ WHEN 提取AI回复内容 THEN 系统 SHALL 使用平台适配器已有的清理逻辑：
+   - 移除平台特有的引用标记（如Gemini的`[cite: X]`）
    - 保留代码块、列表、引用等Markdown格式
    - 移除不可见的UI元素（按钮、图标等）
+   - **实现**：
+     - gemini-adapter.js:176-203 清理UI元素并转换为Markdown
+     - gemini-adapter.js:221-234 清理Gemini引用标记
+     - html-to-markdown.js:14-70 集成Turndown库保留完整格式
 
-3. WHEN 提取用户消息 THEN 系统 SHALL 获取用户输入的原始内容
+3. ✅ WHEN 提取用户消息 THEN 系统 SHALL 获取用户输入的原始内容
+   - **实现**：gemini-adapter.js:169-171 提取用户消息文本
 
-4. IF 某条消息提取失败 THEN 系统 SHALL 跳过该消息并继续处理，不中断整体流程
+4. ✅ IF 某条消息提取失败 THEN 系统 SHALL 跳过该消息并继续处理，不中断整体流程
+   - **实现**：conversation-exporter.js:73-84, 93-109 使用 try-catch 跳过失败消息
 
 ---
 

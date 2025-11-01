@@ -1,9 +1,16 @@
 # 设计文档：对话导出功能
 
+> **📝 文档状态**：本文档包含设计方案和实际实现对比
+> - ✅ 绿色标记 = 已按设计实现
+> - 🔄 黄色标记 = 实现方案有调整
+> - ⬜ 灰色标记 = 未实现（Phase 2）
+
 ## 概述 (Overview)
 
 ### 功能目标
 通过点击浏览器扩展图标，一键复制当前页面的完整AI对话（用户提问 + AI回复），自动格式化为结构化Markdown并写入剪贴板。
+
+**实现状态**：✅ Gemini平台已完全实现，其他平台开发中（Phase 2）
 
 ### 设计原则（Linus哲学）
 1. **数据结构优先**：遍历DOM → 数据数组 → Markdown字符串，清晰的单向数据流
@@ -12,10 +19,10 @@
 4. **简洁执念**：新增代码 < 150行，复用现有平台适配器架构
 
 ### MVP范围
-- ✅ 支持的平台：Gemini、Claude、ChatGPT、Grok
-- ✅ 提取当前页面所有可见对话
-- ✅ Markdown格式化（轮次、时间戳、平台名称）
-- ✅ 写入剪贴板并显示成功提示
+- 🟡 支持的平台：✅ Gemini（已完成）、⬜ Claude、⬜ ChatGPT、⬜ Grok（Phase 2）
+- ✅ 提取当前页面所有可见对话 **[已实现]**
+- ✅ Markdown格式化（轮次、时间戳、平台名称）**[已实现]**
+- ✅ 写入剪贴板并显示成功提示 **[已实现]**
 - ❌ 不处理懒加载历史消息（用户手动滚动）
 - ❌ 不支持选区复制（二期功能）
 
@@ -79,9 +86,14 @@ sequenceDiagram
 
 ## 组件与接口 (Components and Interfaces)
 
-### 1. 平台适配器接口扩展
+### 1. 平台适配器接口扩展 ✅ **[已实现]**
 
 **文件位置：** `src/platform/platform-adapter.js`
+
+**实现状态**：
+- ✅ 接口已定义（platform-adapter.js）
+- ✅ Gemini平台已实现（gemini-adapter.js:149-234）
+- ⬜ 其他平台待实现（Phase 2）
 
 **新增方法：**
 ```javascript
@@ -121,9 +133,16 @@ class PlatformAdapter {
 
 ---
 
-### 2. 对话导出模块
+### 2. 对话导出模块 🔄 **[已实现 - 方案有调整]**
 
 **文件位置：** `src/conversation-exporter.js`
+
+**实现状态**：✅ 核心逻辑已完成，实际实现与设计方案略有差异
+
+**关键调整**：
+1. 🔄 使用类封装而非单独函数：`class ConversationExporter`
+2. 🔄 剪贴板写入由 background.js 通过 executeScript 完成，而非 content script 直接调用
+3. ✅ HTML→Markdown转换集成 Turndown 库，保留完整格式
 
 **核心函数：**
 
@@ -260,9 +279,11 @@ window.conversationExporter = {
 
 ---
 
-### 3. Background Script 扩展
+### 3. Background Script 扩展 ✅ **[已实现]**
 
 **文件位置：** `src/background.js`
+
+**实现状态**：✅ 完全按设计实现（background.js:9-107）
 
 **新增功能：**
 ```javascript
@@ -309,9 +330,11 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 ---
 
-### 4. Content Script 扩展
+### 4. Content Script 扩展 ✅ **[已实现]**
 
 **文件位置：** `src/content.js`
+
+**实现状态**：✅ 完全按设计实现（content.js:466-482）
 
 **新增消息监听：**
 ```javascript
@@ -607,45 +630,53 @@ window.conversationExporter.export().then(() => {
 
 ---
 
-## 文件变更清单
+## 文件变更清单 ✅ **[Gemini平台已完成]**
 
 ### 新增文件
-1. `src/conversation-exporter.js` - 对话导出核心模块（~150行）
+1. ✅ `src/conversation-exporter.js` - 对话导出核心模块（230行，含详细注释）
+2. ✅ `src/libs/turndown.js` - Turndown库（26KB，第三方库）
+3. ✅ `src/utils/html-to-markdown.js` - Turndown封装（76行）
 
 ### 修改文件
-1. `src/platform/platform-adapter.js` - 新增3个抽象方法（~20行）
-2. `src/platform/gemini-adapter.js` - 实现3个新方法（~40行）
-3. `src/platform/claude-adapter.js` - 实现3个新方法（~40行）
-4. `src/platform/chatgpt-adapter.js` - 实现3个新方法（~40行）
-5. `src/platform/grok-adapter.js` - 实现3个新方法（~40行）
-6. `src/background.js` - 新增扩展图标点击处理（~30行）
-7. `src/content.js` - 新增消息监听器（~10行）
-8. `manifest.json` - 新增 `notifications` 权限和 `conversation-exporter.js` 加载
+1. ✅ `src/platform/platform-adapter.js` - 新增3个抽象方法
+2. ✅ `src/platform/gemini-adapter.js` - 实现3个新方法（85行）
+3. ⬜ `src/platform/claude-adapter.js` - 实现3个新方法（Phase 2）
+4. ⬜ `src/platform/chatgpt-adapter.js` - 实现3个新方法（Phase 2）
+5. ⬜ `src/platform/grok-adapter.js` - 实现3个新方法（Phase 2）
+6. ✅ `src/background.js` - 新增扩展图标点击处理（99行）
+7. ✅ `src/content.js` - 新增消息监听器（17行）
+8. ✅ `manifest.json` - 新增 `notifications` 权限和脚本加载
+9. ✅ `CLAUDE.md` - 更新技术栈说明（添加Turndown）
 
-### 代码行数估算
-- 新增代码：~150行（conversation-exporter.js）
-- 修改代码：~200行（适配器 × 4 + background + content）
-- **总计：~350行**
+### 代码行数统计（实际）
+- 新增代码：~400行（含Turndown封装和详细注释）
+- 修改代码：~150行
+- **总计：~550行**（含第三方库配置）
 
 ---
 
 ## 实现优先级
 
-### Phase 1：核心功能（P0）
-1. 扩展 `platform-adapter.js` 接口
-2. 实现 `conversation-exporter.js` 核心逻辑
-3. 修改 `background.js` 和 `content.js` 消息传递
-4. 实现 Gemini 平台适配器（验证可行性）
+### Phase 1：核心功能（P0）✅ **[已完成]**
+1. ✅ 扩展 `platform-adapter.js` 接口
+2. ✅ 实现 `conversation-exporter.js` 核心逻辑
+3. ✅ 修改 `background.js` 和 `content.js` 消息传递
+4. ✅ 实现 Gemini 平台适配器（验证可行性）
+5. ✅ 集成 Turndown 库实现 HTML→Markdown 转换
+6. ✅ 错误处理完善（空页面、未支持平台、单条消息失败）
 
-### Phase 2：平台支持（P1）
-1. 实现 Claude 平台适配器
-2. 实现 ChatGPT 平台适配器
-3. 实现 Grok 平台适配器
+**完成时间**：2025-01-15
+**总代码量**：~550行
 
-### Phase 3：完善（P2）
-1. 错误处理优化
-2. 性能测试与优化
-3. 跨平台测试
+### Phase 2：平台支持（P1）⬜ **[开发中]**
+1. ⬜ 实现 Claude 平台适配器
+2. ⬜ 实现 ChatGPT 平台适配器
+3. ⬜ 实现 Grok 平台适配器
+
+### Phase 3：完善（P2）⬜ **[计划中]**
+1. ⬜ 性能测试与优化（100+轮对话）
+2. ⬜ 跨平台测试矩阵
+3. ⬜ 懒加载历史消息提示
 
 ---
 
