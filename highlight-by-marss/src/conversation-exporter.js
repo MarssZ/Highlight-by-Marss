@@ -200,21 +200,21 @@ class ConversationExporter {
     const timestamp = `${year}-${month}-${day} ${hours}:${minutes}`;
 
     // 构建Markdown
-    let markdown = `## 对话记录 ${timestamp}\n\n`;
+    let markdown = `# 对话记录 ${timestamp}\n\n`;
     markdown += `**平台：** ${platformName}\n\n`;
     markdown += `---\n\n`;
 
     rounds.forEach((round, index) => {
-      markdown += `### 第${index + 1}轮\n\n`;
+      markdown += `## 第${index + 1}轮\n\n`;
 
       // 用户消息
       if (round.user) {
-        markdown += `**用户：**\n${round.user}\n\n`;
+        markdown += `<*用户*>\n${round.user}\n\n`;
       }
 
       // AI回复
       if (round.ai) {
-        markdown += `**${platformName}：**\n${round.ai}\n\n`;
+        markdown += `<*${platformName}*>\n${round.ai}\n\n`;
       }
     });
 
