@@ -1,14 +1,24 @@
 
-## 本地环境信息
-- **操作系统**：Windows11
-- **Python版本**：3.12.9
+## 项目类型
+- **Chrome 扩展** (Manifest V3)
+- 为 AI 聊天平台提供高亮和评论功能
+
+## 技术栈
+- **语言**：原生 JavaScript (ES6+)
+- **样式**：CSS (Material Design)
+- **核心 API**：CSS.highlights API, Content Scripts, Chrome Extension APIs
+- **架构模式**：平台适配器模式 (Platform Adapter Pattern)
+- **无构建工具**：直接加载，无需编译
+
+## 本地环境
+- **操作系统**：Windows 11
 - **工作目录**：`E:\MarssPython\highlight-by-marss`
-- **项目结构**：`specs/{功能名称}/` 目录存放规范文档
+- **扩展目录**：`highlight-by-marss/` (可直接加载到 Chrome)
 
 ## 开发约定
 - 使用中文注释和文档
-- 项目采用模块化结构
-- **包管理器**：使用 uv 而不是 pip 管理Python依赖
+- 零依赖原则：不引入任何外部框架或库
+- 零DOM污染：使用 CSS.highlights API 而不是修改 DOM
 - 始终保持代码简洁，less is More
 
 ## 📁 项目结构（ASCII树形图）
