@@ -42,10 +42,10 @@ AI Highlight Assistant 是一个Chrome浏览器扩展，旨在增强用户与AI�
 **用户故事：** 作为AI聊天用户，我希望能够高亮AI回复中的重要文本，以便标记和后续引用关键信息
 
 #### 验收标准
-1. WHEN 用户在AI回复中选择文本并点击右键 THEN 系统 SHALL 显示"高亮选中文本"选项
-2. WHEN 用户选择高亮选项 THEN 系统 SHALL 将选中文本以黄色背景高亮显示
-3. IF 用户在已高亮文本上点击 THEN 系统 SHALL 提供取消高亮选项
-4. WHEN 页面刷新 THEN 系统 SHALL 保持之前的高亮状态
+1. WHEN 用户在AI回复中按住 Alt 键并选择文本 THEN 系统 SHALL 将选中文本以黄色背景高亮显示
+2. WHEN 用户直接选择文本（不按 Alt 键）THEN 系统 SHALL NOT 触发高亮，避免复制时误触
+3. IF 用户在已高亮文本上按住 Ctrl 并点击 THEN 系统 SHALL 移除该高亮
+4. WHEN 用户按下 Ctrl+Z THEN 系统 SHALL 撤销最后一个高亮
 
 ### 需求2：高亮内容复制引用
 **用户故事：** 作为用户，我希望能够复制包含高亮标记的AI回复内容，以便在新的提问中引用

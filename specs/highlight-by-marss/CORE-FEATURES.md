@@ -20,7 +20,7 @@
 ## 功能概览
 
 AI Highlight Assistant 提供三大核心功能：
-1. **文本高亮** - 选中即高亮，支持跨元素选择
+1. **文本高亮** - Alt+选中触发，防止误触，支持跨元素选择
 2. **评论管理** - 为高亮文本添加个人评论
 3. **智能复制** - 复制时自动包含高亮标记和评论
 
@@ -34,7 +34,8 @@ sequenceDiagram
     participant C as Content Script
     participant H as CSS.highlights API
 
-    U->>C: 在 AI 回复区域选中文本
+    U->>C: 按住 Alt 键 + 在 AI 回复区域选中文本
+    C->>C: 检查 event.altKey 是否为 true
     C->>C: 检查选择范围是否在 AI 回复内
     C->>C: 立即应用 CSS 高亮
     C->>H: 添加到 highlights 注册表
@@ -62,7 +63,7 @@ range.surroundContents(span);
 - ✅ **跨元素支持** - CSS.highlights API 原生支持跨越多个 DOM 节点的选择
 - ✅ **零 DOM 污染** - 不修改页面 HTML 结构
 - ✅ **范围限制** - 只能在 AI 回复区域内高亮，避免误操作
-- ✅ **即时响应** - 选中文本立即高亮，无需点击菜单
+- ✅ **组合键触发** - Alt+选中触发，防止复制时误触
 
 ### 高亮控制
 
@@ -206,7 +207,7 @@ function escapeXml(text) {
 
 ### 完整工作流
 
-1. **用户选中 AI 回复中的文本** → 立即高亮（黄色背景）
+1. **用户按住 Alt + 选中 AI 回复中的文本** → 立即高亮（黄色背景）
 2. **点击高亮文本** → 弹出评论输入框 → 输入并保存评论
 3. **保存评论后** → 显示 🔖 指示器
 4. **悬停指示器** → 显示评论内容

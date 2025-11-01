@@ -80,19 +80,24 @@ function setupTextSelection() {
 
 // 处理文本选择
 function handleTextSelection(event) {
+  // 🔒 防误触：只有按下 Alt 键时才触发高亮
+  if (!event.altKey) {
+    return;
+  }
+
   const selection = window.getSelection();
-  
+
   if (selection.rangeCount > 0 && selection.toString().trim().length > 0) {
     const selectedText = selection.toString().trim();
-    
+
     // 检查选择是否在AI回复区域内
     if (!isSelectionInAIResponse(selection)) {
       // Selection outside AI response area, ignoring
       return;
     }
-    
+
     // Text selected in AI response
-    
+
     // 立即应用高亮效果
     if (supportsHighlights) {
       applyHighlightCSS(selection);

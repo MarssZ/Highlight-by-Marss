@@ -13,7 +13,7 @@ The design philosophy of this plugin is:
 ## 🚀 User Guide
 
 ### Basic Operations
-1. Select AI response text for automatic highlighting
+1. **Alt+Select** AI response text to trigger highlighting
 2. Ctrl+Click to remove highlight (Cmd+Click on Mac)
 3. Ctrl+Z to undo last highlight (Cmd+Z on Mac)
 
@@ -36,7 +36,7 @@ The design philosophy of this plugin is:
 ## 💡 Design Highlights
 
 ### User Experience Optimization
-- **Anti-mistouch mechanism**: No comment trigger within 300ms after highlighting to avoid conflicts
+- **Anti-mistouch mechanism**: Alt key required for highlighting to avoid accidental triggers when copying; No comment trigger within 300ms after highlighting
 - **Smart positioning**: Comment dialog automatically avoids screen boundaries
 - **Inline indicators**: 🔖 icons follow text scrolling, won't "float away"
 - **Visual consistency**: Uses 🔖 bookmark icon, clearly visible on white backgrounds
