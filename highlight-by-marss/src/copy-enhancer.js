@@ -136,16 +136,21 @@ function isValidCopyButton(button) {
 function setupCopyButtonListener(button) {
   // 标记已处理
   button.setAttribute('data-ai-highlight-enhanced', 'true');
-  
-  // 监听点击事件
+
+  // 监听点击事件（捕获阶段，优先执行）
   button.addEventListener('click', function(event) {
-    // Copy button clicked
-    
-    // 延迟处理，让原始复制操作先完成
-    setTimeout(() => {
-      handleCopyButtonClick(button, event);
-    }, 200); // 增加延迟确保原始复制完成
-  }, true);
+    console.log('🎯 [CopyEnhancer] 捕获复制按钮点击事件');
+
+    // 阻止原生复制事件
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    console.log('🛑 [CopyEnhancer] 已阻止原生复制事件');
+
+    // 立即执行增强复制（不延迟）
+    handleCopyButtonClick(button, event);
+  }, true); // true = 捕获阶段
 }
 
 // 处理复制按钮点击
