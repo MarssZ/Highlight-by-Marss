@@ -12,6 +12,22 @@
 
 ### 🎯 验证策略：先做能立即看到效果的
 
+### ⚠️ 重要技术说明：Chrome Extension Isolated World
+
+**问题**：Chrome Extension 的 Content Scripts 运行在"隔离世界"（Isolated World）：
+- ✅ 共享 DOM - 可以操作同一个页面元素
+- ❌ 不共享 JavaScript 全局对象 - `window.xxx` 在页面控制台无法访问
+- ✅ 共享 console - 日志输出到同一个控制台
+
+**影响**：
+- 控制台无法直接运行 `window.platformAdapter.findUserMessages()` 等命令
+- 所有需要访问扩展变量的验证都无法在控制台手动执行
+
+**解决方案**：
+- ✅ 已在 `content.js:484-520` 添加自动验证代码
+- 刷新页面后等待 3 秒，自动执行任务 3-5 的验证并输出结果
+- 后续任务如需验证，可采用类似自动验证方式
+
 ---
 
 ### 1秒验证 - 用户可见效果
@@ -39,63 +55,84 @@
   - 需求：REQ-3（平台识别与适配）+ REQ-5（数据提取准确性）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
-    - Gemini页面（2轮对话）→ F12运行 `window.platformAdapter.findUserMessages()`
-    - 输出：`[<user-query>, <user-query>]` (2个元素)
-    - F12显示："GeminiAdapter: found 2 user messages"
-  - ✅ 已完成：gemini-adapter.js:149-153 (findUserMessages方法)
+    - ⚠️ **注意**：由于 Chrome Extension Isolated World 隔离，控制台无法直接访问 `window.platformAdapter`
+    - 验证方式：刷新 Gemini 页面 → 等待 3 秒 → 查看控制台自动验证输出
+    - 预期输出：
+      ```
+      🧪 自动验证任务3: findUserMessages()
+      ✅ 验证成功！
+      📊 找到用户消息数量: 2
+      📋 用户消息列表: [user-query, user-query]
+      ```
+  - ✅ 已完成：
+    - gemini-adapter.js:149-153 (findUserMessages方法)
+    - content.js:484-520 (自动验证代码)
 
 - [x] 4. 实现Gemini平台文本提取
   - 需求：REQ-5（数据提取准确性）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
-    - F12运行 `window.platformAdapter.extractText(userMessages[0])`
-    - 输出：用户输入的原始文本（如 "你好啊"）
-    - 无UI元素、无按钮文字
+    - 查看任务3的自动验证输出
+    - 预期输出：
+      ```
+      🧪 自动验证任务4: extractText()
+      ✅ 第一条消息文本: 你好啊
+      ```
+    - 确认无UI元素、无按钮文字
   - ✅ 已完成：gemini-adapter.js:160-177 (extractText方法) + :193-206 (清理引用标记)
 
 - [x] 5. 实现Gemini平台名称获取
   - 需求：REQ-3（平台识别与适配）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
-    - F12运行 `window.platformAdapter.getPlatformDisplayName()`
-    - 输出：`"Gemini"`
+    - 查看任务3的自动验证输出
+    - 预期输出：
+      ```
+      🧪 自动验证任务5: getPlatformDisplayName()
+      ✅ 平台名称: Gemini
+      ```
   - ✅ 已完成：gemini-adapter.js:183-185 (getPlatformDisplayName方法)
 
 ---
 
 ### Console验证 - 技术验证（有具体输出）
 
+⚠️ **验证方式调整**：由于 Isolated World 限制，任务6-9无法在控制台手动运行。改为以下验证方式：
+1. **实现代码** → **点击扩展图标** → **查看通知和控制台日志**
+2. **粘贴到文本编辑器** → **检查格式和内容**
+
 - [ ] 6. 实现对话数据提取逻辑
   - 需求：REQ-5（数据提取准确性）
   - 文件：`highlight-by-marss/src/conversation-exporter.js`
-  - 验证：
-    - Gemini页面（3轮对话）→ F12运行 `window.conversationExporter.export()`
-    - F12显示：
+  - 验证方式：
+    - Gemini页面（3轮对话）→ **点击扩展图标**
+    - 控制台日志显示提取过程（建议添加 console.log）：
       ```
       提取到 3 条用户消息
       提取到 3 条AI回复
       配对后共 6 条消息
       ```
-    - 返回 `{success: true, rounds: 3}`
+    - 通知显示："已复制 3 轮对话" 或 详细错误信息
 
 - [ ] 7. 实现DOM排序逻辑
   - 需求：REQ-5（数据提取准确性 - 时间顺序）
   - 文件：`highlight-by-marss/src/conversation-exporter.js`
-  - 验证：
-    - F12运行导出函数 → 检查 `conversationData` 数组
-    - 第1个元素：`{role: 'user', content: '第一个问题', ...}`
-    - 第2个元素：`{role: 'assistant', content: '第一个回答', ...}`
+  - 验证方式：
+    - 在 export() 函数中添加 console.log 输出对话数据数组
+    - 点击扩展图标 → 查看控制台日志
+    - 确认顺序：第1个元素是用户问题，第2个是AI回答，依此类推
     - 顺序与页面显示一致
 
 - [ ] 8. 实现Markdown格式化
   - 需求：REQ-2（Markdown格式化）
   - 文件：`highlight-by-marss/src/conversation-exporter.js`
-  - 验证：
-    - F12运行格式化函数 → 复制输出到文本编辑器
-    - 包含标题：`## 对话记录 2025-01-15 14:30`
-    - 包含平台：`**平台：** Gemini`
-    - 包含轮次：`### 第1轮`、`### 第2轮`
-    - 格式正确：`**用户：**\n内容` 和 `**Gemini：**\n内容`
+  - 验证方式：
+    - 点击扩展图标 → 粘贴到文本编辑器
+    - 检查格式：
+      - 包含标题：`## 对话记录 2025-01-15 14:30`
+      - 包含平台：`**平台：** Gemini`
+      - 包含轮次：`### 第1轮`、`### 第2轮`
+      - 格式正确：`**用户：**\n内容` 和 `**Gemini：**\n内容`
 
 ---
 
@@ -104,10 +141,11 @@
 - [ ] 9. 实现剪贴板写入
   - 需求：REQ-1（一键复制全部对话）
   - 文件：`highlight-by-marss/src/conversation-exporter.js`
-  - 验证：
-    - Gemini页面 → F12运行 `window.conversationExporter.export()`
-    - 粘贴到文本编辑器 → 看到格式化的Markdown
+  - 验证方式：
+    - Gemini页面 → **点击扩展图标**
+    - Ctrl+V 粘贴到文本编辑器 → 看到格式化的Markdown
     - 内容与页面对话一致
+  - 💡 **提示**：剪贴板写入必须用 `navigator.clipboard.writeText()`，在 content script 上下文有权限
 
 - [ ] 10. 集成background.js消息传递
   - 需求：REQ-1（一键复制全部对话）
@@ -120,10 +158,11 @@
 - [ ] 11. 集成content.js消息监听
   - 需求：REQ-1（一键复制全部对话）
   - 文件：`highlight-by-marss/src/content.js`
-  - 验证：
+  - 验证方式：
     - 点击扩展图标 → 通知显示成功
     - F12 Network标签 → 无报错
-    - F12 Console → 显示 "收到exportConversation消息"
+    - F12 Console → 查看是否有消息传递相关日志（可选添加 console.log）
+  - 💡 **提示**：content.js:466-482 已有消息监听代码，调用 `conversationExporter.export()`
 
 ---
 
@@ -154,16 +193,19 @@
 
 ---
 
-### 架构任务 - 最后验证（Console输出）
+### 架构任务 - 最后验证
 
-- [ ] 15. 扩展平台适配器接口
+- [x] 15. 扩展平台适配器接口
   - 需求：技术架构
   - 文件：`highlight-by-marss/src/platform/platform-adapter.js`
-  - 验证：
-    - 打开任意适配器文件 → 检查是否实现3个新方法
-    - F12运行 `window.platformAdapter.findUserMessages` → 不报错
-    - F12运行 `window.platformAdapter.extractText` → 不报错
-    - F12运行 `window.platformAdapter.getPlatformDisplayName` → 不报错
+  - 验证方式：
+    - ⚠️ **Isolated World 限制**：无法在控制台直接访问 `window.platformAdapter`
+    - ✅ **已通过任务3-5验证**：自动验证代码成功调用了 3 个新方法
+    - 检查代码实现：
+      - `findUserMessages()` - gemini-adapter.js:149-153 ✅
+      - `extractText()` - gemini-adapter.js:160-177 ✅
+      - `getPlatformDisplayName()` - gemini-adapter.js:183-185 ✅
+  - ✅ 已完成：接口扩展已验证，所有方法可正常调用
 
 ---
 
@@ -230,14 +272,21 @@
 - **Phase 1（核心功能）**：15个任务
   - 1秒验证：2个 ✅ **已完成 2/2**
   - 5秒验证：3个 ✅ **已完成 3/3**
-  - Console验证：4个 ⬜ **进行中 0/4**
-  - 手动测试：3个 ⬜ **待开始 0/3**
+  - Console验证：4个 ⬜ **待开始 0/4** (验证方式已更新)
+  - 手动测试：3个 ⬜ **待开始 0/3** (验证方式已更新)
   - 错误处理：3个 ⬜ **待开始 0/3**
+  - 架构任务：1个 ✅ **已完成 1/1**
 
 - **Phase 2（平台支持）**：3个任务 ⬜ **待开始 0/3**
 - **Phase 3（完善测试）**：2个任务 ⬜ **待开始 0/2**
 
-**总计：20个任务 | 已完成：5个 (25%) | 进行中：0个 | 待开始：15个**
+**总计：20个任务 | 已完成：6个 (30%) | 进行中：0个 | 待开始：14个**
+
+### ⚠️ 验证方式变更说明
+
+由于 Chrome Extension Isolated World 机制，原计划在控制台手动运行的验证（任务6-9、15）已调整：
+- **任务6-9**：改为"点击扩展图标 + 查看日志/通知 + 检查粘贴内容"
+- **任务15**：已通过任务3-5的自动验证完成接口验证，标记为完成
 
 ---
 
@@ -256,11 +305,12 @@
 
 1. ✅ **任务1-2完成** → 扩展图标能点击、能显示通知 ✅ **已达成**
 2. ✅ **任务3-5完成** → Gemini平台数据提取能work ✅ **已达成**
-3. ⬜ **任务6-9完成** → 能生成完整Markdown
-4. ⬜ **任务10-11完成** → 完整流程打通（点击图标 → 复制到剪贴板）
-5. ⬜ **任务12-14完成** → 错误处理完善
-6. ⬜ **Phase 1全部完成** → Gemini平台可用
-7. ⬜ **Phase 2完成** → 4个平台全部可用
+3. ✅ **任务15完成** → 平台适配器接口扩展验证 ✅ **已达成**
+4. ⬜ **任务6-9完成** → 能生成完整Markdown
+5. ⬜ **任务10-11完成** → 完整流程打通（点击图标 → 复制到剪贴板）
+6. ⬜ **任务12-14完成** → 错误处理完善
+7. ⬜ **Phase 1全部完成** → Gemini平台可用
+8. ⬜ **Phase 2完成** → 4个平台全部可用
 
 ---
 
@@ -270,3 +320,8 @@
 - **优先做能立即看到效果的任务**（避免错误传染）
 - **Console验证必须有具体输出**（不是"系统正常"）
 - **Phase 2的3个任务可以并行做**（不同平台互不影响）
+- ⚠️ **重要**：由于 Chrome Extension Isolated World 隔离机制，控制台无法直接访问扩展变量（`window.platformAdapter` 等），所有需要访问扩展内部状态的验证都改为：
+  1. 在代码中添加 `console.log` 输出调试信息
+  2. 点击扩展图标触发功能
+  3. 查看控制台日志和通知结果
+  4. 检查实际输出（如粘贴到文本编辑器）

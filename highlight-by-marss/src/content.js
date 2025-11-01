@@ -480,3 +480,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
+
+// 🐛 调试辅助：自动验证任务3（对话导出功能开发）
+// 注意：Content scripts 运行在 isolated world，控制台无法直接访问 window.platformAdapter
+// 因此我们在这里自动执行验证并输出结果
+setTimeout(() => {
+  if (platformAdapter && platformAdapter.findUserMessages) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🧪 自动验证任务3: findUserMessages()');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    try {
+      const userMessages = platformAdapter.findUserMessages();
+      console.log('✅ 验证成功！');
+      console.log('📊 找到用户消息数量:', userMessages.length);
+      console.log('📋 用户消息列表:', userMessages);
+
+      // 测试文本提取
+      if (userMessages.length > 0) {
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🧪 自动验证任务4: extractText()');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        const firstText = platformAdapter.extractText(userMessages[0]);
+        console.log('✅ 第一条消息文本:', firstText);
+      }
+
+      // 测试平台名称
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🧪 自动验证任务5: getPlatformDisplayName()');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ 平台名称:', platformAdapter.getPlatformDisplayName());
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    } catch (error) {
+      console.error('❌ 验证失败:', error);
+    }
+  }
+}, 3000); // 等待3秒确保页面完全加载
