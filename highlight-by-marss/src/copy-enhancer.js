@@ -163,6 +163,13 @@ function handleCopyButtonClick(button, event) {
 
     console.log('✅ [CopyEnhancer] 找到消息容器');
 
+    // 🔍 诊断：输出容器信息
+    console.log('📦 [CopyEnhancer] 容器诊断信息：');
+    console.log('  - 容器类名:', messageContainer.className);
+    console.log('  - 容器ID:', messageContainer.id);
+    console.log('  - 容器标签:', messageContainer.tagName);
+    console.log('  - 文本内容(前100字符):', messageContainer.textContent.substring(0, 100));
+
     // 检查是否包含高亮内容（用于日志）
     const hasHighlights = checkForHighlights(messageContainer);
     console.log(`📊 [CopyEnhancer] 是否有高亮: ${hasHighlights}`);
@@ -187,21 +194,29 @@ function handleCopyButtonClick(button, event) {
 
 // 查找消息容器
 function findMessageContainer(button) {
+  console.log('🔍 [CopyEnhancer] 查找消息容器...');
+
   const adapter = window.platformAdapter;
   if (adapter) {
+    console.log('✅ [CopyEnhancer] 使用平台适配器查找容器');
     // 使用平台适配器查找消息容器
     try {
       const container = adapter.getCopyButtonContainer(button);
       if (container) {
-        // Platform adapter found message container
+        console.log('✅ [CopyEnhancer] 平台适配器找到容器');
         return container;
+      } else {
+        console.warn('⚠️ [CopyEnhancer] 平台适配器未找到容器，使用fallback');
       }
     } catch (error) {
-      console.warn('Error using platform adapter for message container:', error);
+      console.warn('⚠️ [CopyEnhancer] 平台适配器报错，使用fallback:', error);
     }
+  } else {
+    console.warn('⚠️ [CopyEnhancer] platformAdapter不存在，使用fallback');
   }
-  
+
   // 降级到原有逻辑
+  console.log('🔄 [CopyEnhancer] 使用fallback查找容器');
   return findMessageContainerFallback(button);
 }
 

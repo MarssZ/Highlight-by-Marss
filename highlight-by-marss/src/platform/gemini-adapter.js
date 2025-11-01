@@ -95,22 +95,45 @@ class GeminiAdapter extends PlatformAdapter {
 
   /**
    * 获取复制按钮对应的消息容器
-   * @param {Element} button
+   * @param {Element} button - AI回复的复制按钮（已由findCopyButtons验证）
    * @returns {Element|null}
+   *
+   * 设计原则：
+   * - findCopyButtons() 已经验证了按钮是AI回复的，这里不需要再验证
+   * - 只需要找到包含 AI 回复内容的容器即可
    */
   getCopyButtonContainer(button) {
-    if (!button) return null;
-
-    // 向上查找消息容器
-    let container = button.parentElement;
-    while (container && container !== document.body) {
-      if (this.isValidResponseContainer(container)) {
-        return container;
-      }
-      container = container.parentElement;
+    if (!button) {
+      console.warn('🔴 [Gemini] button 为 null');
+      return null;
     }
 
-    return null;
+    console.log('🔍 [Gemini] 查找复制按钮对应的容器...');
+    console.log('  - 按钮元素:', button.tagName, button.className);
+
+    // 策略：向上找到 model-response 元素，然后在其中找 markdown 容器
+    const modelResponse = button.closest('model-response');
+
+    if (!modelResponse) {
+      console.warn('⚠️ [Gemini] 未找到 model-response 父容器');
+      return null;
+    }
+
+    console.log('✅ [Gemini] 找到 model-response 容器');
+
+    // 在 model-response 中查找 markdown 容器
+    const markdownContainer = modelResponse.querySelector('.markdown.markdown-main-panel');
+
+    if (markdownContainer) {
+      console.log('✅ [Gemini] 找到 markdown 容器');
+      console.log('  - 容器ID:', markdownContainer.id);
+      console.log('  - 文本内容(前50字符):', markdownContainer.textContent.substring(0, 50).trim());
+      return markdownContainer;
+    }
+
+    // 如果没找到精确的 markdown 容器，退而求其次返回 model-response
+    console.warn('⚠️ [Gemini] 未找到 markdown 容器，返回 model-response');
+    return modelResponse;
   }
 
   /**
@@ -119,7 +142,7 @@ class GeminiAdapter extends PlatformAdapter {
    * @returns {void}
    *
    * 清理目标：
-   * 1. <source-footnote> - 上标引用数字（如 35, 36）
+   * 1. <source-footnote> - 包含上标引用的整个元素（包括内部的 <sup>）
    * 2. <sources-carousel-inline> - 末尾的引用链接芯片
    */
   cleanClonedContainer(clonedContainer) {
@@ -129,16 +152,26 @@ class GeminiAdapter extends PlatformAdapter {
     }
 
     console.log('🔧 [Gemini] 开始清理克隆容器的引用标记...');
+    console.log('📝 [Gemini] 清理前 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
 
-    // 删除所有上标引用标记
+    // 删除所有 source-footnote 元素（包含上标引用）
     const footnotes = clonedContainer.querySelectorAll('source-footnote');
     console.log(`📊 [Gemini] 找到 ${footnotes.length} 个 <source-footnote> 元素`);
+
     if (footnotes.length > 0) {
       footnotes.forEach((footnote, index) => {
-        const text = footnote.textContent.trim();
-        console.log(`  - footnote[${index}]: "${text}"`);
+        // 在删除前记录信息
+        const sup = footnote.querySelector('sup[data-turn-source-index]');
+        const refIndex = sup ? sup.getAttribute('data-turn-source-index') : '未知';
+        const textBefore = footnote.textContent.trim();
+
+        console.log(`  - footnote[${index}]: refIndex=${refIndex}, textContent="${textBefore}"`);
+
+        // 删除整个 source-footnote 元素
         footnote.remove();
       });
+
+      console.log('📝 [Gemini] 清理后 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
     }
 
     // 删除末尾的引用链接芯片
