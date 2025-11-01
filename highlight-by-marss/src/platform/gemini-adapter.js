@@ -170,32 +170,37 @@ class GeminiAdapter extends PlatformAdapter {
       const textElement = container.querySelector('.query-text');
       return textElement ? textElement.textContent.trim() : '';
     } else {
-      // AI回复：查找 message-content 容器
-      const messageContent = container.querySelector('message-content .markdown');
-      if (messageContent) {
-        // 克隆节点以便处理
-        const cloned = messageContent.cloneNode(true);
+      // AI回复：container 本身就是 .markdown 元素
+      // 克隆节点以便处理
+      const cloned = container.cloneNode(true);
 
-        // 移除不需要的元素（引用按钮、图标等）
-        const unwantedSelectors = [
-          'source-footnote',
-          'sources-carousel-inline',
-          '.source-inline-chip',
-          'mat-icon',
-          'button'
-        ];
-        unwantedSelectors.forEach(selector => {
-          cloned.querySelectorAll(selector).forEach(el => el.remove());
-        });
+      // 移除不需要的元素（引用按钮、图标等）
+      const unwantedSelectors = [
+        'source-footnote',
+        'sources-carousel-inline',
+        '.source-inline-chip',
+        'source-inline-chip',
+        'mat-icon',
+        'button'
+      ];
+      unwantedSelectors.forEach(selector => {
+        cloned.querySelectorAll(selector).forEach(el => el.remove());
+      });
 
-        // 提取文本并清理引用标记
-        const text = cloned.textContent || cloned.innerText || '';
-        return this._cleanGeminiCitations(text);
-      }
+      // 🧪 验证：同时输出HTML和纯文本
+      const html = cloned.innerHTML;
+      const text = cloned.textContent || cloned.innerText || '';
 
-      // 降级：直接使用容器的textContent
-      const textContent = container.textContent || container.innerText || '';
-      return this._cleanGeminiCitations(textContent);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🧪 验证HTML结构：');
+      console.log('📝 HTML长度:', html.length);
+      console.log('📝 Text长度:', text.length);
+      console.log('📋 HTML前500字符:');
+      console.log(html.substring(0, 500));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // 暂时返回纯文本
+      return this._cleanGeminiCitations(text);
     }
   }
 
