@@ -126,35 +126,6 @@ class GeminiAdapter extends PlatformAdapter {
   }
 
   /**
-   * 清理克隆容器中的Gemini引用标记
-   * @param {Element} clonedContainer 克隆的容器元素
-   * @returns {void}
-   *
-   * 策略：删除CSS伪元素的数据源，阻止浏览器在textContent时提取伪元素内容
-   * - 删除 data-turn-source-index 属性 → CSS ::after 无内容可渲染
-   * - 删除 <sources-carousel-inline> → 末尾引用链接
-   */
-  cleanClonedContainer(clonedContainer) {
-    if (!clonedContainer) {
-      return;
-    }
-
-    // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
-    const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
-    if (sups.length > 0) {
-      sups.forEach((sup) => {
-        sup.removeAttribute('data-turn-source-index');
-      });
-    }
-
-    // 策略2: 删除末尾的引用链接芯片
-    const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
-    if (carousels.length > 0) {
-      carousels.forEach(carousel => carousel.remove());
-    }
-  }
-
-  /**
    * 私有方法：判断是否为AI回复的复制按钮
    * @param {Element} button
    * @returns {boolean}

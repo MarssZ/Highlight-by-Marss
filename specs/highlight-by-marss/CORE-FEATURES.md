@@ -229,9 +229,8 @@ Gemini 复制结果：
 
 **解决方案**：
 
-使用 **双层清理策略**：
+使用 **正则表达式精准清理**（`copy-enhancer.js`）：
 
-1. **剪贴板级别清理**（`copy-enhancer.js`）：
 ```javascript
 function cleanGeminiCitations(text) {
   if (!text) return text;
@@ -249,25 +248,12 @@ function cleanGeminiCitations(text) {
 }
 ```
 
-2. **DOM 级别清理**（`GeminiAdapter.cleanClonedContainer()`）：
-```javascript
-cleanClonedContainer(clonedContainer) {
-  // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
-  const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
-  sups.forEach(sup => sup.removeAttribute('data-turn-source-index'));
-
-  // 策略2: 删除末尾的引用链接
-  const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
-  carousels.forEach(carousel => carousel.remove());
-}
-```
-
 **关键设计原则**：
 
 - ✅ **只删除标记本身** - 不删除换行符 `\n`、制表符 `\t` 等格式字符
 - ✅ **保留用户数据** - 代码块、列表、段落格式完全保留
 - ✅ **精准匹配** - 使用正则表达式精确匹配引用标记模式
-- ✅ **平台适配器集成** - 通过 `GeminiAdapter` 封装平台特定逻辑
+- ✅ **简洁实用** - 只在剪贴板字符串级别清理，无需 DOM 操作
 
 **验证标准**：
 - ✅ 复制代码块时保留换行符和缩进
@@ -292,8 +278,7 @@ text.replace(/\[cite:\s*[\d,\s]+\]/g, '')
 ```
 
 **相关代码**：
-- `src/copy-enhancer.js` - 剪贴板清理逻辑
-- `src/platform/gemini-adapter.js` - Gemini 平台适配器
+- `src/copy-enhancer.js` - 剪贴板清理逻辑（`cleanGeminiCitations()` 函数）
 
 ## 核心流程总结
 

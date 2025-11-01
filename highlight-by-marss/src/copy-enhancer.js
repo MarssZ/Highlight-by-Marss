@@ -319,13 +319,6 @@ function generateHighlightedText(container) {
     // 克隆容器以避免修改原DOM
     const clonedContainer = container.cloneNode(true);
 
-    // 🆕 清理平台特定的引用标记（在提取textContent之前）
-    if (window.platformAdapter) {
-      if (typeof window.platformAdapter.cleanClonedContainer === 'function') {
-        window.platformAdapter.cleanClonedContainer(clonedContainer);
-      }
-    }
-
     // 处理DOM高亮 (.ai-highlight-fallback)
     const fallbackHighlights = clonedContainer.querySelectorAll('.ai-highlight-fallback');
     fallbackHighlights.forEach(highlight => {

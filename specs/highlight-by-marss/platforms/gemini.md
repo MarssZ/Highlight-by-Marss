@@ -116,9 +116,7 @@ Gemini 原生复制结果（格式被破坏）：
 
 **解决方案**：
 
-采用 **双层清理策略**，确保从两个层面彻底清除引用标记：
-
-#### 1. 剪贴板级别清理
+使用 **正则表达式精准清理** Gemini 插入的引用标记：
 
 **文件**：`src/copy-enhancer.js`
 
@@ -146,31 +144,7 @@ function cleanGeminiCitations(text) {
 - ✅ 正则表达式 `/\[cite:\s*[\d,\s]+\]/g` 精准匹配 `[cite: 1]` 和 `[cite: 1, 2, 3]`
 - ✅ 只清理连续空格，**不触碰换行符 `\n` 和制表符 `\t`**
 - ✅ 保留所有代码块、列表、段落格式
-
-#### 2. DOM 级别清理
-
-**文件**：`src/platform/gemini-adapter.js`
-
-**时机**：在克隆容器后、提取 textContent 之前
-
-**代码实现**：
-```javascript
-cleanClonedContainer(clonedContainer) {
-  if (!clonedContainer) return;
-
-  // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
-  const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
-  sups.forEach(sup => sup.removeAttribute('data-turn-source-index'));
-
-  // 策略2: 删除末尾的引用链接芯片
-  const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
-  carousels.forEach(carousel => carousel.remove());
-}
-```
-
-**清理目标**：
-- `<sup data-turn-source-index="1">` - 上标引用编号元素
-- `<sources-carousel-inline>` - 末尾的引用来源链接
+- ✅ 简洁高效，只在剪贴板字符串级别清理，无需 DOM 操作
 
 ---
 
