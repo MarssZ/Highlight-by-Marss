@@ -201,7 +201,99 @@ function escapeXml(text) {
 - 检查 `hasComment` 标志
 - 动态生成对应格式的标签
 
-**相关代码**：`src/copy-enhancer.js`
+### 平台特定清理（Gemini 引用标记）
+
+**问题背景**：
+
+Gemini 平台在用户复制 AI 回复时，会自动插入引用标记，破坏内容的可读性和格式：
+- `[cite_start]` - 标记引用内容的开始
+- `[cite: 1]` 或 `[cite: 1, 2, 3]` - 引用来源的编号
+
+示例：
+```
+原始回复：
+这是第一段内容
+代码块示例：
+  function test() {
+    return true;
+  }
+
+Gemini 复制结果：
+这是第一段内容[cite_start][cite: 1]代码块示例：  function test() {    return true;  }
+```
+
+**问题影响**：
+- ❌ 引用标记破坏可读性
+- ❌ 代码块格式被压缩成一行
+- ❌ 列表和段落结构丢失
+
+**解决方案**：
+
+使用 **双层清理策略**：
+
+1. **剪贴板级别清理**（`copy-enhancer.js`）：
+```javascript
+function cleanGeminiCitations(text) {
+  if (!text) return text;
+
+  // 删除 [cite_start] 标记
+  let cleaned = text.replace(/\[cite_start\]/g, '');
+
+  // 删除 [cite: X] 标记（只删除标记本身，不删除周围的空白）
+  cleaned = cleaned.replace(/\[cite:\s*[\d,\s]+\]/g, '');
+
+  // 只清理连续的空格（不包括换行符）
+  cleaned = cleaned.replace(/ {1,}/g, ' ');
+
+  return cleaned;
+}
+```
+
+2. **DOM 级别清理**（`GeminiAdapter.cleanClonedContainer()`）：
+```javascript
+cleanClonedContainer(clonedContainer) {
+  // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
+  const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
+  sups.forEach(sup => sup.removeAttribute('data-turn-source-index'));
+
+  // 策略2: 删除末尾的引用链接
+  const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
+  carousels.forEach(carousel => carousel.remove());
+}
+```
+
+**关键设计原则**：
+
+- ✅ **只删除标记本身** - 不删除换行符 `\n`、制表符 `\t` 等格式字符
+- ✅ **保留用户数据** - 代码块、列表、段落格式完全保留
+- ✅ **精准匹配** - 使用正则表达式精确匹配引用标记模式
+- ✅ **平台适配器集成** - 通过 `GeminiAdapter` 封装平台特定逻辑
+
+**验证标准**：
+- ✅ 复制代码块时保留换行符和缩进
+- ✅ 引用标记 `[cite_start]` 和 `[cite: X]` 完全清除
+- ✅ 段落、列表格式不受影响
+
+**常见陷阱**：
+
+⚠️ **错误做法**（会破坏格式）：
+```javascript
+// ❌ 这会删除所有空白字符，包括换行符！
+text.replace(/\s+/g, ' ')
+
+// ❌ 这会删除引用标记前的换行符！
+text.replace(/\s*\[cite:\s*[\d,\s]+\]/g, '')
+```
+
+✅ **正确做法**（只删除标记）：
+```javascript
+// ✅ 只删除标记本身
+text.replace(/\[cite:\s*[\d,\s]+\]/g, '')
+```
+
+**相关代码**：
+- `src/copy-enhancer.js` - 剪贴板清理逻辑
+- `src/platform/gemini-adapter.js` - Gemini 平台适配器
 
 ## 核心流程总结
 

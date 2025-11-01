@@ -76,6 +76,154 @@ class GeminiAdapter extends PlatformAdapter {
 - 点击高亮显示 Material Design 评论对话框
 - 评论与高亮关联存储，🔖指示器显示和悬停
 - 复制时包含评论信息格式化
+- **🆕 引用标记清理** - 自动清除 Gemini 的 `[cite_start]` 和 `[cite: X]` 标记
+
+## 平台特殊挑战
+
+### 引用标记污染问题 🆕
+
+**问题描述**：
+
+Gemini 平台在用户复制 AI 回复时，会自动插入引用标记，严重破坏内容格式：
+
+**插入的标记**：
+- `[cite_start]` - 标记引用内容的开始
+- `[cite: 1]` 或 `[cite: 1, 2, 3]` - 引用来源的编号
+
+**实际影响示例**：
+
+```
+原始 AI 回复：
+这是一个关于 Python 的代码示例：
+
+```python
+def hello():
+    print("Hello, World!")
+    return True
+```
+
+Gemini 原生复制结果（格式被破坏）：
+这是一个关于 Python 的代码示例：[cite_start][cite: 1]```pythondef hello():    print("Hello, World!")    return True```
+```
+
+**问题根源**：
+- ❌ 引用标记插入到文本中，破坏可读性
+- ❌ 代码块格式被压缩成一行（换行符丢失）
+- ❌ 列表缩进结构丢失
+- ❌ 段落分隔符消失
+
+---
+
+**解决方案**：
+
+采用 **双层清理策略**，确保从两个层面彻底清除引用标记：
+
+#### 1. 剪贴板级别清理
+
+**文件**：`src/copy-enhancer.js`
+
+**时机**：在读取剪贴板内容后立即清理
+
+**代码实现**：
+```javascript
+function cleanGeminiCitations(text) {
+  if (!text) return text;
+
+  // 删除 [cite_start] 标记
+  let cleaned = text.replace(/\[cite_start\]/g, '');
+
+  // 删除 [cite: X] 标记（只删除标记本身，不删除周围的空白）
+  cleaned = cleaned.replace(/\[cite:\s*[\d,\s]+\]/g, '');
+
+  // 只清理连续的空格（不包括换行符）
+  cleaned = cleaned.replace(/ {1,}/g, ' ');
+
+  return cleaned;
+}
+```
+
+**关键设计**：
+- ✅ 正则表达式 `/\[cite:\s*[\d,\s]+\]/g` 精准匹配 `[cite: 1]` 和 `[cite: 1, 2, 3]`
+- ✅ 只清理连续空格，**不触碰换行符 `\n` 和制表符 `\t`**
+- ✅ 保留所有代码块、列表、段落格式
+
+#### 2. DOM 级别清理
+
+**文件**：`src/platform/gemini-adapter.js`
+
+**时机**：在克隆容器后、提取 textContent 之前
+
+**代码实现**：
+```javascript
+cleanClonedContainer(clonedContainer) {
+  if (!clonedContainer) return;
+
+  // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
+  const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
+  sups.forEach(sup => sup.removeAttribute('data-turn-source-index'));
+
+  // 策略2: 删除末尾的引用链接芯片
+  const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
+  carousels.forEach(carousel => carousel.remove());
+}
+```
+
+**清理目标**：
+- `<sup data-turn-source-index="1">` - 上标引用编号元素
+- `<sources-carousel-inline>` - 末尾的引用来源链接
+
+---
+
+**常见陷阱与最佳实践**：
+
+⚠️ **错误做法**（会破坏格式）：
+```javascript
+// ❌ 这会删除所有空白字符，包括换行符和制表符！
+text.replace(/\s+/g, ' ')
+
+// ❌ 这会删除引用标记前的换行符！
+text.replace(/\s*\[cite:\s*[\d,\s]+\]/g, '')
+```
+
+✅ **正确做法**（只删除标记）：
+```javascript
+// ✅ 只删除标记本身，不动换行符
+text.replace(/\[cite:\s*[\d,\s]+\]/g, '')
+
+// ✅ 只清理连续空格，不动换行符
+text.replace(/ {1,}/g, ' ')
+```
+
+---
+
+**验证标准**：
+
+测试用例：复制包含代码块的 AI 回复
+
+| 测试项 | 验证方法 | 预期结果 |
+|--------|----------|----------|
+| 引用标记清除 | 搜索 `[cite` | ✅ 无任何 `[cite_start]` 或 `[cite: X]` |
+| 代码块格式 | 检查换行符 | ✅ 保留所有 `\n` 换行符 |
+| 代码缩进 | 检查制表符/空格 | ✅ 保留所有缩进 |
+| 列表结构 | 检查段落分隔 | ✅ 保留所有段落换行 |
+
+**实际验证命令**（在控制台）：
+```javascript
+// 复制 AI 回复后，执行：
+navigator.clipboard.readText().then(text => {
+  console.log('引用标记数量:', (text.match(/\[cite/g) || []).length); // 应为 0
+  console.log('换行符数量:', (text.match(/\n/g) || []).length);      // 应 > 0
+  console.log('前100字符:', text.substring(0, 100));
+});
+```
+
+---
+
+**开发时间线**：
+- **问题发现**：2024-11 用户反馈复制代码块格式错乱
+- **根因分析**：定位到 `replace(/\s+/g, ' ')` 删除了换行符
+- **解决方案**：精准正则匹配 + 双层清理策略
+- **验证完成**：所有格式保留，引用标记完全清除
 
 ## 开发经验
 

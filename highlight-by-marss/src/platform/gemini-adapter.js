@@ -104,35 +104,24 @@ class GeminiAdapter extends PlatformAdapter {
    */
   getCopyButtonContainer(button) {
     if (!button) {
-      console.warn('🔴 [Gemini] button 为 null');
       return null;
     }
-
-    console.log('🔍 [Gemini] 查找复制按钮对应的容器...');
-    console.log('  - 按钮元素:', button.tagName, button.className);
 
     // 策略：向上找到 model-response 元素，然后在其中找 markdown 容器
     const modelResponse = button.closest('model-response');
 
     if (!modelResponse) {
-      console.warn('⚠️ [Gemini] 未找到 model-response 父容器');
       return null;
     }
-
-    console.log('✅ [Gemini] 找到 model-response 容器');
 
     // 在 model-response 中查找 markdown 容器
     const markdownContainer = modelResponse.querySelector('.markdown.markdown-main-panel');
 
     if (markdownContainer) {
-      console.log('✅ [Gemini] 找到 markdown 容器');
-      console.log('  - 容器ID:', markdownContainer.id);
-      console.log('  - 文本内容(前50字符):', markdownContainer.textContent.substring(0, 50).trim());
       return markdownContainer;
     }
 
     // 如果没找到精确的 markdown 容器，退而求其次返回 model-response
-    console.warn('⚠️ [Gemini] 未找到 markdown 容器，返回 model-response');
     return modelResponse;
   }
 
@@ -147,34 +136,22 @@ class GeminiAdapter extends PlatformAdapter {
    */
   cleanClonedContainer(clonedContainer) {
     if (!clonedContainer) {
-      console.warn('🔴 [Gemini] cleanClonedContainer: 容器为空');
       return;
     }
 
-    console.log('🔧 [Gemini] 开始清理克隆容器的引用标记...');
-    console.log('📝 [Gemini] 清理前 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
-
     // 策略1: 删除 data-turn-source-index 属性，阻止CSS伪元素渲染
     const sups = clonedContainer.querySelectorAll('sup[data-turn-source-index]');
-    console.log(`📊 [Gemini] 找到 ${sups.length} 个 <sup data-turn-source-index> 元素`);
-
     if (sups.length > 0) {
-      sups.forEach((sup, index) => {
-        const refIndex = sup.getAttribute('data-turn-source-index');
-        console.log(`  - sup[${index}]: 删除 data-turn-source-index="${refIndex}"`);
+      sups.forEach((sup) => {
         sup.removeAttribute('data-turn-source-index');
       });
     }
 
     // 策略2: 删除末尾的引用链接芯片
     const carousels = clonedContainer.querySelectorAll('sources-carousel-inline');
-    console.log(`📊 [Gemini] 找到 ${carousels.length} 个 <sources-carousel-inline> 元素`);
     if (carousels.length > 0) {
       carousels.forEach(carousel => carousel.remove());
     }
-
-    console.log('📝 [Gemini] 清理后 textContent (前100字符):', clonedContainer.textContent.substring(0, 100).trim());
-    console.log('✅ [Gemini] 引用标记清理完成');
   }
 
   /**
@@ -200,10 +177,7 @@ class GeminiAdapter extends PlatformAdapter {
   testAdapterMethods() {
     const containers = this.findResponseContainers();
     const copyButtons = this.findCopyButtons();
-    
-    console.log(`GeminiAdapter loaded: detected ${window.location.hostname}`);
-    console.log(`Found ${containers.length} AI response containers, ${copyButtons.length} copy buttons`);
-    
+
     return {
       containers: containers.length,
       copyButtons: copyButtons.length

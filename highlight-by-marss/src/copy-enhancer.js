@@ -26,12 +26,10 @@ function findAndSetupCopyButtons() {
   if (adapter) {
     // 使用平台适配器查找复制按钮
     try {
-      copyButtons = adapter.findCopyButtons().filter(button => 
+      copyButtons = adapter.findCopyButtons().filter(button =>
         !button.hasAttribute('data-ai-highlight-enhanced')
       );
-      // Platform adapter found copy buttons
     } catch (error) {
-      console.warn('Error using platform adapter for copy buttons:', error);
       copyButtons = findCopyButtonsFallback();
     }
   } else {
@@ -139,8 +137,6 @@ function setupCopyButtonListener(button) {
 
   // 监听点击事件
   button.addEventListener('click', function(event) {
-    console.log('🎯 [CopyEnhancer] 复制按钮被点击');
-
     // 延迟处理，让原始复制操作先完成
     setTimeout(() => {
       handleCopyButtonClick(button, event);
@@ -151,17 +147,11 @@ function setupCopyButtonListener(button) {
 // 处理复制按钮点击
 async function handleCopyButtonClick(button, event) {
   try {
-    console.log('🔧 [CopyEnhancer] 开始处理复制内容...');
-
     // 读取剪贴板（Gemini 已经复制了 Markdown 格式的内容）
     let clipboardText = await navigator.clipboard.readText();
 
-    console.log('📋 [CopyEnhancer] 读取剪贴板内容 (前100字符):', clipboardText.substring(0, 100));
-
     // 清理 Gemini 的引用标记
     const cleanedText = cleanGeminiCitations(clipboardText);
-
-    console.log('🧹 [CopyEnhancer] 清理后内容 (前100字符):', cleanedText.substring(0, 100));
 
     // 检查是否有高亮需要处理
     const messageContainer = findMessageContainer(button);
@@ -170,14 +160,11 @@ async function handleCopyButtonClick(button, event) {
     let finalText = cleanedText;
 
     if (hasHighlights && messageContainer) {
-      console.log('🎨 [CopyEnhancer] 检测到高亮，添加高亮标签...');
       // TODO: 在 Markdown 中添加高亮标签（保留格式）
       // 暂时先用清理后的文本
     }
 
     // 写回剪贴板（覆盖所有格式，只保留纯文本）
-    console.log('📤 [CopyEnhancer] 准备写回剪贴板（覆盖所有格式）...');
-
     // 创建只包含纯文本的 ClipboardItem
     const blob = new Blob([finalText], { type: 'text/plain' });
     const clipboardItem = new ClipboardItem({
@@ -185,30 +172,14 @@ async function handleCopyButtonClick(button, event) {
     });
 
     await navigator.clipboard.write([clipboardItem]);
-    console.log('✅ [CopyEnhancer] 剪贴板写入成功（已清空 HTML 格式）');
-
-    // 验证写入（读取一次确认）
-    const verifyText = await navigator.clipboard.readText();
-    console.log('🔍 [CopyEnhancer] 验证剪贴板内容 (前100字符):', verifyText.substring(0, 100));
-
-    if (verifyText === finalText) {
-      console.log('✅ [CopyEnhancer] 剪贴板内容验证成功');
-    } else {
-      console.warn('⚠️ [CopyEnhancer] 剪贴板内容不匹配！');
-    }
-
-    console.log('✅ [CopyEnhancer] 增强复制完成' + (hasHighlights ? ' (含高亮标签)' : ' (已清理引用)'));
-
   } catch (error) {
-    console.error('❌ [CopyEnhancer] 处理失败:', error);
+    // 静默处理错误
   }
 }
 
 // 清理 Gemini 的引用标记
 function cleanGeminiCitations(text) {
   if (!text) return text;
-
-  console.log('🧹 [CopyEnhancer] 清理 Gemini 引用标记...');
 
   // 删除 [cite_start] 标记
   let cleaned = text.replace(/\[cite_start\]/g, '');
@@ -219,39 +190,25 @@ function cleanGeminiCitations(text) {
   // 只清理连续的空格（不包括换行符）
   cleaned = cleaned.replace(/ {1,}/g, ' ');
 
-  // 清理行首空格
-  // cleaned = cleaned.replace(/^ +/gm, '');
-
-  console.log('✅ [CopyEnhancer] 引用标记清理完成');
-
   return cleaned;
 }
 
 // 查找消息容器
 function findMessageContainer(button) {
-  console.log('🔍 [CopyEnhancer] 查找消息容器...');
-
   const adapter = window.platformAdapter;
   if (adapter) {
-    console.log('✅ [CopyEnhancer] 使用平台适配器查找容器');
     // 使用平台适配器查找消息容器
     try {
       const container = adapter.getCopyButtonContainer(button);
       if (container) {
-        console.log('✅ [CopyEnhancer] 平台适配器找到容器');
         return container;
-      } else {
-        console.warn('⚠️ [CopyEnhancer] 平台适配器未找到容器，使用fallback');
       }
     } catch (error) {
-      console.warn('⚠️ [CopyEnhancer] 平台适配器报错，使用fallback:', error);
+      // 降级到fallback
     }
-  } else {
-    console.warn('⚠️ [CopyEnhancer] platformAdapter不存在，使用fallback');
   }
 
   // 降级到原有逻辑
-  console.log('🔄 [CopyEnhancer] 使用fallback查找容器');
   return findMessageContainerFallback(button);
 }
 
@@ -359,24 +316,14 @@ function getElementAttributes(element) {
 // 🆕 生成带高亮和评论标签的文本内容
 function generateHighlightedText(container) {
   try {
-    console.log('🔍 [CopyEnhancer] ========== 开始生成高亮文本 ==========');
-
     // 克隆容器以避免修改原DOM
     const clonedContainer = container.cloneNode(true);
-    console.log('📋 [CopyEnhancer] 容器已克隆');
 
     // 🆕 清理平台特定的引用标记（在提取textContent之前）
     if (window.platformAdapter) {
-      console.log(`✅ [CopyEnhancer] platformAdapter 已加载: ${window.platformAdapter.getPlatformName()}`);
-
       if (typeof window.platformAdapter.cleanClonedContainer === 'function') {
-        console.log('🧹 [CopyEnhancer] 调用 platformAdapter.cleanClonedContainer()...');
         window.platformAdapter.cleanClonedContainer(clonedContainer);
-      } else {
-        console.warn('⚠️ [CopyEnhancer] platformAdapter.cleanClonedContainer 方法不存在');
       }
-    } else {
-      console.warn('⚠️ [CopyEnhancer] platformAdapter 未初始化，跳过清理');
     }
 
     // 处理DOM高亮 (.ai-highlight-fallback)
@@ -387,55 +334,46 @@ function generateHighlightedText(container) {
       highlightTag.textContent = text;
       highlight.parentNode.replaceChild(highlightTag, highlight);
     });
-    
+
     // 提取纯文本并替换标记为<highlight>标签
     let textContent = clonedContainer.textContent || clonedContainer.innerText || '';
-    console.log('📝 [CopyEnhancer] 提取原始textContent (前100字符):', textContent.substring(0, 100));
-    
+
     // 🆕 处理CSS.highlights高亮，包含评论信息
     if (window.highlights && window.highlights.size > 0) {
-      // Processing highlights with comments
-      
       // 按文本长度排序，避免短文本替换影响长文本
       const sortedHighlights = Array.from(window.highlights.entries())
         .filter(([id, highlightData]) => isRangeInContainer(highlightData.range, container))
         .sort(([,a], [,b]) => b.text.length - a.text.length);
-      
+
       for (const [id, highlightData] of sortedHighlights) {
         const highlightText = highlightData.text.trim();
         if (highlightText && textContent.includes(highlightText)) {
           // 🆕 获取关联的评论数据
           const commentData = window.highlightComments ? window.highlightComments.get(id) : null;
           const hasComment = commentData && commentData.hasComment && commentData.comment.trim();
-          
+
           let replacementTag;
           if (hasComment) {
             // 有评论：生成带comment属性的标签
             const escapedComment = escapeXMLAttribute(commentData.comment.trim());
             replacementTag = `<highlight comment="${escapedComment}">${highlightText}</highlight>`;
-            // Generated highlight with comment
           } else {
             // 无评论：生成普通标签
             replacementTag = `<highlight>${highlightText}</highlight>`;
-            // Generated highlight without comment
           }
-          
+
           // 替换文本（只替换第一个匹配项，避免重复）
           textContent = textContent.replace(
-            new RegExp(escapeRegExp(highlightText)), 
+            new RegExp(escapeRegExp(highlightText)),
             replacementTag
           );
         }
       }
     }
 
-    // Final enhanced content generated
-    console.log('📤 [CopyEnhancer] 最终文本 (前100字符):', textContent.substring(0, 100));
-    console.log('🔍 [CopyEnhancer] ========== 生成完成 ==========');
     return textContent;
-    
+
   } catch (error) {
-    console.log('Error generating highlighted text:', error);
     return null;
   }
 }
@@ -470,9 +408,8 @@ function copyToClipboard(text) {
     // 优先使用 navigator.clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
-        // Text copied using navigator.clipboard
+        // 成功
       }).catch(error => {
-        console.warn('⚠️ Navigator.clipboard failed, trying fallback');
         fallbackCopyToClipboard(text);
       });
     } else {
@@ -480,7 +417,6 @@ function copyToClipboard(text) {
       fallbackCopyToClipboard(text);
     }
   } catch (error) {
-    console.log('Error copying to clipboard:', error);
     fallbackCopyToClipboard(text);
   }
 }
@@ -496,7 +432,6 @@ function fallbackCopyToClipboard(text) {
     textarea.select();
     document.execCommand('copy');
     document.body.removeChild(textarea);
-    // Text copied using fallback method
   } catch (error) {
     console.error('❌ All copy methods failed:', error);
   }
