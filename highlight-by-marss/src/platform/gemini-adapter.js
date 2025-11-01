@@ -153,9 +153,9 @@ class GeminiAdapter extends PlatformAdapter {
   }
 
   /**
-   * 🆕 从容器提取纯文本内容
+   * 🆕 从容器提取内容
    * @param {Element} container - 消息容器元素
-   * @returns {string} 清理后的纯文本内容（移除UI元素、引用标记等）
+   * @returns {string} 清理后的纯文本内容
    */
   extractText(container) {
     if (!container) {
@@ -170,7 +170,30 @@ class GeminiAdapter extends PlatformAdapter {
       const textElement = container.querySelector('.query-text');
       return textElement ? textElement.textContent.trim() : '';
     } else {
-      // AI回复：提取markdown容器的文本，并清理引用标记
+      // AI回复：查找 message-content 容器
+      const messageContent = container.querySelector('message-content .markdown');
+      if (messageContent) {
+        // 克隆节点以便处理
+        const cloned = messageContent.cloneNode(true);
+
+        // 移除不需要的元素（引用按钮、图标等）
+        const unwantedSelectors = [
+          'source-footnote',
+          'sources-carousel-inline',
+          '.source-inline-chip',
+          'mat-icon',
+          'button'
+        ];
+        unwantedSelectors.forEach(selector => {
+          cloned.querySelectorAll(selector).forEach(el => el.remove());
+        });
+
+        // 提取文本并清理引用标记
+        const text = cloned.textContent || cloned.innerText || '';
+        return this._cleanGeminiCitations(text);
+      }
+
+      // 降级：直接使用容器的textContent
       const textContent = container.textContent || container.innerText || '';
       return this._cleanGeminiCitations(textContent);
     }
