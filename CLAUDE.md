@@ -47,22 +47,43 @@ highlight-by-marss/
 │   ├── comment-manager.js  # 评论功能管理（UI+指示器+交互）
 │   ├── platform/           # 🆕 平台适配器架构
 │   │   ├── platform-adapter.js  # 适配器基础接口
-│   │   ├── gemini-adapter.js     # Gemini平台适配器
-│   │   ├── claude-adapter.js     # claude平台适配器
-│   │   └── ...............js     # 其它平台适配器
+│   │   ├── gemini-adapter.js    # Gemini平台适配器
+│   │   ├── claude-adapter.js    # Claude平台适配器
+│   │   ├── grok-adapter.js      # Grok平台适配器
+│   │   ├── chatgpt-adapter.js   # ChatGPT平台适配器
+│   │   └── doubao-adapter.js    # 豆包平台适配器
 │   └── background.js       # 后台脚本
 ├── styles/
 │   ├── content.css         # 高亮样式
 │   └── comment.css         # 评论UI样式（Material Design）
-└── specs/                  # 功能规格文档
+└── specs/                  # 📚 规范文档（按模块组织）
     └── highlight-by-marss/
-        ├── requirements.md # 需求文档
-        ├── design.md      # 设计文档
-        └── tasks.md       # 任务清单
+        ├── ARCHITECTURE.md     # 🆕 核心架构设计
+        ├── CORE-FEATURES.md    # 🆕 核心功能详解
+        ├── platforms/          # 🆕 平台适配器文档
+        │   ├── README.md       #     平台开发指南
+        │   ├── gemini.md       #     Gemini平台
+        │   ├── claude.md       #     Claude平台
+        │   ├── grok.md         #     Grok平台（含3个陷阱）
+        │   └── chatgpt.md      #     ChatGPT平台
+        ├── requirements.md     # 需求文档
+        ├── tasks.md           # 任务清单
+        └── verify.md          # 技术验证报告
 
 ```
 
 ## 相关文档
-none
-- url: 
-- why: 
+
+### 核心文档
+- **架构设计**: [specs/highlight-by-marss/ARCHITECTURE.md](specs/highlight-by-marss/ARCHITECTURE.md) - 设计原则、核心架构、技术决策
+- **核心功能**: [specs/highlight-by-marss/CORE-FEATURES.md](specs/highlight-by-marss/CORE-FEATURES.md) - 高亮、评论、复制功能详解
+- **需求文档**: [specs/highlight-by-marss/requirements.md](specs/highlight-by-marss/requirements.md) - 功能需求和验收标准
+
+### 平台适配
+- **开发指南**: [specs/highlight-by-marss/platforms/README.md](specs/highlight-by-marss/platforms/README.md) - 标准开发流程、陷阱清单
+- **Grok平台**: [specs/highlight-by-marss/platforms/grok.md](specs/highlight-by-marss/platforms/grok.md) - **必读！包含3个关键陷阱**
+- **其他平台**: [specs/highlight-by-marss/platforms/](specs/highlight-by-marss/platforms/) - Gemini、Claude、ChatGPT 等
+
+### 其他
+- **技术验证**: [specs/highlight-by-marss/verify.md](specs/highlight-by-marss/verify.md) - API验证、平台测试结果
+- **任务清单**: [specs/highlight-by-marss/tasks.md](specs/highlight-by-marss/tasks.md) - 开发进度跟踪 
