@@ -16,45 +16,50 @@
 
 ### 1秒验证 - 用户可见效果
 
-- [ ] 1. 实现扩展图标点击通知功能
+- [x] 1. 实现扩展图标点击通知功能
   - 需求：REQ-1（一键复制全部对话）
   - 文件：`highlight-by-marss/src/background.js`
   - 验证：点击扩展图标 → 1秒内看到通知（"未检测到对话内容" 或其他提示）
+  - ✅ 已完成：background.js:9-47
 
-- [ ] 2. 添加manifest.json配置
+- [x] 2. 添加manifest.json配置
   - 需求：技术约束
   - 文件：`highlight-by-marss/manifest.json`
   - 验证：
     - 刷新扩展 → F12无报错
     - 检查 `manifest.json` → 包含 `notifications` 权限
     - 检查 `content_scripts.js` → 包含 `conversation-exporter.js`
+  - ✅ 已完成：manifest.json:10 (notifications权限) + :24 (conversation-exporter.js)
 
 ---
 
 ### 5秒验证 - 简单操作验证
 
-- [ ] 3. 实现Gemini平台用户消息提取
+- [x] 3. 实现Gemini平台用户消息提取
   - 需求：REQ-3（平台识别与适配）+ REQ-5（数据提取准确性）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
     - Gemini页面（2轮对话）→ F12运行 `window.platformAdapter.findUserMessages()`
     - 输出：`[<user-query>, <user-query>]` (2个元素)
     - F12显示："GeminiAdapter: found 2 user messages"
+  - ✅ 已完成：gemini-adapter.js:149-153 (findUserMessages方法)
 
-- [ ] 4. 实现Gemini平台文本提取
+- [x] 4. 实现Gemini平台文本提取
   - 需求：REQ-5（数据提取准确性）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
     - F12运行 `window.platformAdapter.extractText(userMessages[0])`
     - 输出：用户输入的原始文本（如 "你好啊"）
     - 无UI元素、无按钮文字
+  - ✅ 已完成：gemini-adapter.js:160-177 (extractText方法) + :193-206 (清理引用标记)
 
-- [ ] 5. 实现Gemini平台名称获取
+- [x] 5. 实现Gemini平台名称获取
   - 需求：REQ-3（平台识别与适配）
   - 文件：`highlight-by-marss/src/platform/gemini-adapter.js`
   - 验证：
     - F12运行 `window.platformAdapter.getPlatformDisplayName()`
     - 输出：`"Gemini"`
+  - ✅ 已完成：gemini-adapter.js:183-185 (getPlatformDisplayName方法)
 
 ---
 
@@ -223,16 +228,16 @@
 ## 任务统计
 
 - **Phase 1（核心功能）**：15个任务
-  - 1秒验证：2个
-  - 5秒验证：3个
-  - Console验证：4个
-  - 手动测试：3个
-  - 错误处理：3个
+  - 1秒验证：2个 ✅ **已完成 2/2**
+  - 5秒验证：3个 ✅ **已完成 3/3**
+  - Console验证：4个 ⬜ **进行中 0/4**
+  - 手动测试：3个 ⬜ **待开始 0/3**
+  - 错误处理：3个 ⬜ **待开始 0/3**
 
-- **Phase 2（平台支持）**：3个任务
-- **Phase 3（完善测试）**：2个任务
+- **Phase 2（平台支持）**：3个任务 ⬜ **待开始 0/3**
+- **Phase 3（完善测试）**：2个任务 ⬜ **待开始 0/2**
 
-**总计：20个任务**
+**总计：20个任务 | 已完成：5个 (25%) | 进行中：0个 | 待开始：15个**
 
 ---
 
@@ -249,13 +254,13 @@
 
 ## 关键里程碑
 
-1. ✅ **任务1-2完成** → 扩展图标能点击、能显示通知
-2. ✅ **任务3-5完成** → Gemini平台数据提取能work
-3. ✅ **任务6-9完成** → 能生成完整Markdown
-4. ✅ **任务10-11完成** → 完整流程打通（点击图标 → 复制到剪贴板）
-5. ✅ **任务12-14完成** → 错误处理完善
-6. ✅ **Phase 1全部完成** → Gemini平台可用
-7. ✅ **Phase 2完成** → 4个平台全部可用
+1. ✅ **任务1-2完成** → 扩展图标能点击、能显示通知 ✅ **已达成**
+2. ✅ **任务3-5完成** → Gemini平台数据提取能work ✅ **已达成**
+3. ⬜ **任务6-9完成** → 能生成完整Markdown
+4. ⬜ **任务10-11完成** → 完整流程打通（点击图标 → 复制到剪贴板）
+5. ⬜ **任务12-14完成** → 错误处理完善
+6. ⬜ **Phase 1全部完成** → Gemini平台可用
+7. ⬜ **Phase 2完成** → 4个平台全部可用
 
 ---
 

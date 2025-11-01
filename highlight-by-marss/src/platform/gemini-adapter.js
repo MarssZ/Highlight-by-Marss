@@ -135,11 +135,74 @@ class GeminiAdapter extends PlatformAdapter {
     const isAICopyButton = (
       button.getAttribute('data-test-id') === 'copy-button' ||
       button.closest('copy-button') ||
-      (button.querySelector('mat-icon[fonticon="content_copy"]') && 
+      (button.querySelector('mat-icon[fonticon="content_copy"]') &&
        this.getCopyButtonContainer(button))
     );
-    
+
     return isAICopyButton;
+  }
+
+  /**
+   * 🆕 查找用户消息容器
+   * @returns {Element[]} 所有用户输入的消息容器，按DOM顺序排列
+   */
+  findUserMessages() {
+    const userMessages = Array.from(document.querySelectorAll('user-query'));
+    console.log(`GeminiAdapter: found ${userMessages.length} user messages`);
+    return userMessages;
+  }
+
+  /**
+   * 🆕 从容器提取纯文本内容
+   * @param {Element} container - 消息容器元素
+   * @returns {string} 清理后的纯文本内容（移除UI元素、引用标记等）
+   */
+  extractText(container) {
+    if (!container) {
+      return '';
+    }
+
+    // 判断是用户消息还是AI回复
+    const tagName = container.tagName.toLowerCase();
+
+    if (tagName === 'user-query') {
+      // 用户消息：提取 .query-text 的文本
+      const textElement = container.querySelector('.query-text');
+      return textElement ? textElement.textContent.trim() : '';
+    } else {
+      // AI回复：提取markdown容器的文本，并清理引用标记
+      const textContent = container.textContent || container.innerText || '';
+      return this._cleanGeminiCitations(textContent);
+    }
+  }
+
+  /**
+   * 🆕 获取平台显示名称
+   * @returns {string} 平台名称
+   */
+  getPlatformDisplayName() {
+    return 'Gemini';
+  }
+
+  /**
+   * 私有方法：清理Gemini的引用标记
+   * @param {string} text
+   * @returns {string}
+   * @private
+   */
+  _cleanGeminiCitations(text) {
+    if (!text) return text;
+
+    // 删除 [cite_start] 标记
+    let cleaned = text.replace(/\[cite_start\]/g, '');
+
+    // 删除 [cite: X] 或 [cite: X, Y, Z] 标记
+    cleaned = cleaned.replace(/\[cite:\s*[\d,\s]+\]/g, '');
+
+    // 只清理连续的空格（不包括换行符）
+    cleaned = cleaned.replace(/ {2,}/g, ' ');
+
+    return cleaned;
   }
 
   /**
