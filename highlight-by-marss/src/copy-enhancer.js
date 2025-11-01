@@ -175,8 +175,27 @@ async function handleCopyButtonClick(button, event) {
       // 暂时先用清理后的文本
     }
 
-    // 写回剪贴板
-    await navigator.clipboard.writeText(finalText);
+    // 写回剪贴板（覆盖所有格式，只保留纯文本）
+    console.log('📤 [CopyEnhancer] 准备写回剪贴板（覆盖所有格式）...');
+
+    // 创建只包含纯文本的 ClipboardItem
+    const blob = new Blob([finalText], { type: 'text/plain' });
+    const clipboardItem = new ClipboardItem({
+      'text/plain': blob
+    });
+
+    await navigator.clipboard.write([clipboardItem]);
+    console.log('✅ [CopyEnhancer] 剪贴板写入成功（已清空 HTML 格式）');
+
+    // 验证写入（读取一次确认）
+    const verifyText = await navigator.clipboard.readText();
+    console.log('🔍 [CopyEnhancer] 验证剪贴板内容 (前100字符):', verifyText.substring(0, 100));
+
+    if (verifyText === finalText) {
+      console.log('✅ [CopyEnhancer] 剪贴板内容验证成功');
+    } else {
+      console.warn('⚠️ [CopyEnhancer] 剪贴板内容不匹配！');
+    }
 
     console.log('✅ [CopyEnhancer] 增强复制完成' + (hasHighlights ? ' (含高亮标签)' : ' (已清理引用)'));
 
@@ -194,11 +213,14 @@ function cleanGeminiCitations(text) {
   // 删除 [cite_start] 标记
   let cleaned = text.replace(/\[cite_start\]/g, '');
 
-  // 删除 [cite: X] 或 [cite: X, Y, Z] 标记
+  // 删除 [cite: X] 或 [cite: X, Y, Z] 标记（保留周围的空格/换行结构）
   cleaned = cleaned.replace(/\s*\[cite:\s*[\d,\s]+\]/g, '');
 
-  // 清理多余空格
-  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+  // 只清理连续的空格（不包括换行符）
+  // cleaned = cleaned.replace(/ {2,}/g, ' ');
+
+  // 清理行首空格
+  // cleaned = cleaned.replace(/^ +/gm, '');
 
   console.log('✅ [CopyEnhancer] 引用标记清理完成');
 
@@ -369,7 +391,6 @@ function generateHighlightedText(container) {
     // 提取纯文本并替换标记为<highlight>标签
     let textContent = clonedContainer.textContent || clonedContainer.innerText || '';
     console.log('📝 [CopyEnhancer] 提取原始textContent (前100字符):', textContent.substring(0, 100));
-    textContent = textContent.replace(/\s+/g, ' ').trim(); // 清理空格
     
     // 🆕 处理CSS.highlights高亮，包含评论信息
     if (window.highlights && window.highlights.size > 0) {
