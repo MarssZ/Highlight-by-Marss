@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "HighLight by Marss",
-  "version": "1.7.1",
+  "version": "1.8.2",
   "description": "AI chat platform highlighting tool. Easily highlight important content and add personal comments. Supports Gemini, Claude, Grok, ChatGPT, and Doubao.",
   "permissions": [
     "storage",
     "contextMenus",
-    "clipboardWrite"
+    "clipboardWrite",
+    "notifications"
   ],
   "host_permissions": [
     "https://gemini.google.com/*",
@@ -20,7 +21,7 @@
   "content_scripts": [
     {
       "matches": ["https://gemini.google.com/*", "https://claude.ai/*", "https://grok.com/*", "https://chat.openai.com/*", "https://chatgpt.com/*", "https://doubao.com/*", "https://www.doubao.com/*"],
-      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/platform/claude-adapter.js", "src/platform/grok-adapter.js", "src/platform/chatgpt-adapter.js", "src/platform/doubao-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js"],
+      "js": ["src/platform/platform-adapter.js", "src/platform/gemini-adapter.js", "src/platform/claude-adapter.js", "src/platform/grok-adapter.js", "src/platform/chatgpt-adapter.js", "src/platform/doubao-adapter.js", "src/content.js", "src/copy-enhancer.js", "src/comment-manager.js", "src/conversation-exporter.js"],
       "css": ["styles/content.css", "styles/comment.css"],
       "run_at": "document_end"
     }
